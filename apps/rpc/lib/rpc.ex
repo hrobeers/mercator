@@ -10,6 +10,14 @@ defmodule Mercator.RPC do
     children = [
       # Starts a worker by calling: Mercator.RPC.Worker.start_link(arg1, arg2, arg3)
       # worker(Mercator.RPC.Worker, [arg1, arg2, arg3]),
+      worker(Gold,
+             [%Gold.Config{
+                 hostname: "localhost",
+                 port: 8444,
+                 user: "testnet",
+                 password: "testnet"},
+              :rpc]
+      )
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html

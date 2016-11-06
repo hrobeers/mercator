@@ -18,7 +18,7 @@ defmodule Mercator.RPC.Mixfile do
   #
   # Type "mix help compile.app" for more information
   def application do
-    [applications: [:logger],
+    [applications: [:logger, :httpoison],
      mod: {Mercator.RPC, []}]
   end
 
@@ -36,6 +36,6 @@ defmodule Mercator.RPC.Mixfile do
   #
   # Type "mix help deps" for more examples and options
   defp deps do
-    []
+    [{:gold, git: "https://github.com/hrobeers/gold.git", branch: "master"}]
   end
 end

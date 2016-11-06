@@ -2,7 +2,7 @@ defmodule Mercator.RPCTest do
   use ExUnit.Case
   doctest Mercator.RPC
 
-  test "the truth" do
-    assert 1 + 1 == 2
+  test "getbalance" do
+    {:ok, _} = :rpc |> Gold.getbalance
   end
 end
