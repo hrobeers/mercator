@@ -12,10 +12,10 @@ defmodule Mercator.RPC do
       # worker(Mercator.RPC.Worker, [arg1, arg2, arg3]),
       worker(Gold,
              [%Gold.Config{
-                 hostname: "localhost",
-                 port: 8444,
-                 user: "testnet",
-                 password: "testnet"},
+                 hostname: Application.get_env(:rpc, :hostname),
+                 port: Application.get_env(:rpc, :port),
+                 user: Application.get_env(:rpc, :user),
+                 password: Application.get_env(:rpc, :password)},
               :rpc]
       )
     ]
