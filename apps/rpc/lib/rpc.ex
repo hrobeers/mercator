@@ -10,7 +10,7 @@ defmodule Mercator.RPC do
     children = [
       # Starts a worker by calling: Mercator.RPC.Worker.start_link(arg1, arg2, arg3)
       # worker(Mercator.RPC.Worker, [arg1, arg2, arg3]),
-      worker(Gold,
+      worker(Application.get_env(:rpc, :rpc_lib),
              [%Gold.Config{
                  hostname: Application.get_env(:rpc, :hostname),
                  port: Application.get_env(:rpc, :port),

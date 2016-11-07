@@ -3,6 +3,9 @@ defmodule Mercator.RPCTest do
   doctest Mercator.RPC
 
   test "getbalance" do
-    {:ok, _} = :rpc |> Gold.getbalance
+    {:ok, balance} = :rpc |> Gold.getbalance
+
+    # Make sure Gold is configured for ppcoin
+    assert balance.exp == -6
   end
 end
