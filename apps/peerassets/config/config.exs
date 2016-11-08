@@ -22,8 +22,12 @@ use Mix.Config
 #
 
 config :peerassets,
-  PAprod: %{addr: "PAprodpH5y2YuJFHFCXWRuVzZNr7Tw78sV", wif: "7A6cFXZSZnNUzutCMcuE1hyqDPtysH2LrSA9i5sqP2BPCLrAvZM"},
-  PAtest: %{addr: "PAtestVJ4usB4JQwZEhFrYRgnhKh8xRoRd", wif: "79nanGVB5H5cGrpqN69F3v4rjyhXy5DiqF499TB5poF627Z1Gw4"}
+  PAprod: %{label: "PAprod",
+            address: "PAprodpH5y2YuJFHFCXWRuVzZNr7Tw78sV",
+            wif: "7A6cFXZSZnNUzutCMcuE1hyqDPtysH2LrSA9i5sqP2BPCLrAvZM"},
+  PAtest: %{label: "PAtest",
+            address: "PAtestVJ4usB4JQwZEhFrYRgnhKh8xRoRd",
+            wif: "79nanGVB5H5cGrpqN69F3v4rjyhXy5DiqF499TB5poF627Z1Gw4"}
 
 
 # Import environment specific config. This must remain at the bottom

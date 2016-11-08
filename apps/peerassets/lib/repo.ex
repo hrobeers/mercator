@@ -1,8 +1,8 @@
 defmodule Mercator.PeerAssets.Repo do
   use GenServer
 
-  @prod_tag { "PAprod", Application.get_env(:peerassets, :PAprod) }
-  @test_tag { "PAtest", Application.get_env(:peerassets, :PAtest) }
+  @prod_tag Application.get_env(:peerassets, :PAprod)
+  @test_tag Application.get_env(:peerassets, :PAtest)
 
   ## Client API
 
@@ -13,11 +13,30 @@ defmodule Mercator.PeerAssets.Repo do
     GenServer.start_link(__MODULE__, :ok, name: :pa_repo)
   end
 
+  @doc """
+  Imports the specified P2TH private key.
+  """
+  def load_tag!(tag) do
+    if (!tag_loaded?(tag)) do
+      :rpc |> Gold.importprivkey(tag.wif, tag.label)
+      true = tag_loaded?(tag)
+    end
+  end
+
+  defp tag_loaded?(tag) do
+    case :rpc
+      |> Gold.getaddressesbyaccount!(tag.label)
+      |> Enum.find(fn a -> a == tag.address end) do
+        nil -> false
+          _ -> true
+    end
+  end
+
   ## Server Callbacks
 
   def init(:ok) do
-    if(!tag_loaded?(@prod_tag), do: load_tag!(@prod_tag))
-    if(!tag_loaded?(@test_tag), do: load_tag!(@test_tag))
+    load_tag!(@prod_tag)
+    load_tag!(@test_tag)
     {:ok, %{}}
   end
 
@@ -32,19 +51,5 @@ defmodule Mercator.PeerAssets.Repo do
 #      {:ok, bucket} = KV.Bucket.start_link
       {:noreply} #, Map.put(names, name, bucket)}
     end
-  end
-
-  defp tag_loaded?({label, tag}) do
-    case :rpc
-      |> Gold.getaddressesbyaccount!(label)
-      |> Enum.find(fn a -> a == tag.addr end) do
-        nil -> false
-          _ -> true
-    end
-  end
-
-  defp load_tag!({label, tag}) do
-    :rpc |> Gold.importprivkey(tag.wif, label)
-    true = tag_loaded?({label, tag})
   end
 end
