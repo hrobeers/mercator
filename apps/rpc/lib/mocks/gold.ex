@@ -23,9 +23,16 @@ defmodule Mocks.Gold do
   ##
   # Internal functions
   ##
-  defp handle_rpc_request(method, _params, config) when is_atom(method) do
+  defp handle_rpc_request(method, params, config) when is_atom(method) do
     case method do
       :getbalance -> {:reply, {:ok, 10.0}, config}
+
+      :getaddressesbyaccount ->
+          case params do
+            ["PAprod"] -> {:reply, {:ok, ["miYNy9BbMkQ8Y5VaRDor4mgH5b3FEzVySr"]}, config}
+            ["PAtest"] -> {:reply, {:ok, ["mwqncWSnzUzouPZcLQWcLTPuSVq3rSiAAa"]}, config}
+          end
+
       _ -> {:error, to_string(method) <> " not mocked"}
     end
   end
