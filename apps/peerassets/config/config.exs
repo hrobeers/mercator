@@ -21,10 +21,11 @@ use Mix.Config
 #     config :logger, level: :info
 #
 
-# It is also possible to import configuration files, relative to this
-# directory. For example, you can emulate configuration per environment
-# by uncommenting the line below and defining dev.exs, test.exs and such.
-# Configuration from the imported file will override the ones defined
-# here (which is why it is important to import them last).
-#
-#     import_config "#{Mix.env}.exs"
+config :peerassets,
+  PAprod: %{addr: "PAprodpH5y2YuJFHFCXWRuVzZNr7Tw78sV", wif: "7A6cFXZSZnNUzutCMcuE1hyqDPtysH2LrSA9i5sqP2BPCLrAvZM"},
+  PAtest: %{addr: "PAtestVJ4usB4JQwZEhFrYRgnhKh8xRoRd", wif: "79nanGVB5H5cGrpqN69F3v4rjyhXy5DiqF499TB5poF627Z1Gw4"}
+
+
+# Import environment specific config. This must remain at the bottom
+# of this file so it overrides the configuration defined above.
+import_config "#{Mix.env}.exs"

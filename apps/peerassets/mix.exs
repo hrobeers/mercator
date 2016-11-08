@@ -18,7 +18,7 @@ defmodule Mercator.PeerAssets.Mixfile do
   #
   # Type "mix help compile.app" for more information
   def application do
-    [applications: [:logger],
+    [applications: [:logger, :rpc],
      mod: {Mercator.PeerAssets, []}]
   end
 
@@ -36,6 +36,6 @@ defmodule Mercator.PeerAssets.Mixfile do
   #
   # Type "mix help deps" for more examples and options
   defp deps do
-    []
+    [{:rpc, in_umbrella: true}]
   end
 end
