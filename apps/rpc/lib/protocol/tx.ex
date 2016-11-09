@@ -10,8 +10,9 @@ defmodule Bitcoin.Protocol.Types.Tx do
   alias Bitcoin.Protocol.Types.TransactionInput
   alias Bitcoin.Protocol.Types.TransactionOutput
 
-  defstruct version: 0, # Transaction data format version
-            inputs: [], # A list of 1 or more transaction inputs or sources for coins
+  defstruct version: 0,  # Transaction data format version
+            timestamp: 0,# Transaction timestamp, only available on ppcoin forks
+            inputs: [],  # A list of 1 or more transaction inputs or sources for coins
             outputs: [], # A list of 1 or more transaction outputs or destinations for coins
             lock_time: 0 # The block number or timestamp at which this transaction is locked:
                          #   0 - Not Locked
@@ -28,8 +29,12 @@ defmodule Bitcoin.Protocol.Types.Tx do
   }
 
   def parse(data) do
+    parse(data, false)
+  end
 
-    <<version :: unsigned-little-integer-size(32), payload :: binary>> = data
+  def parse(data, has_timestamp) do
+
+    {version, timestamp, payload} = parse_version_and_timestamp(data, has_timestamp)
 
     [tx_in_count, payload] = Integer.parse_stream(payload)
 
@@ -49,11 +54,24 @@ defmodule Bitcoin.Protocol.Types.Tx do
 
     %Bitcoin.Protocol.Types.Tx{
       version: version,
+      timestamp: timestamp,
       inputs: transaction_inputs,
       outputs: transaction_outputs,
       lock_time: lock_time
     }
 
+  end
+
+  defp parse_version_and_timestamp(data, has_timestamp) do
+    case has_timestamp do
+      true ->
+        <<version :: unsigned-little-integer-size(32), payload :: binary>> = data
+        <<timestamp :: unsigned-little-integer-size(32), payload :: binary>> = payload
+        {version, timestamp, payload}
+      false ->
+        <<version :: unsigned-little-integer-size(32), payload :: binary>> = data
+        {version, nil, payload}
+    end
   end
 
 end

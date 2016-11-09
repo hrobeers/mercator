@@ -1,5 +1,7 @@
 defmodule Bitcoin.Protocol.Types.BlockHeader do
 
+  alias Bitcoin.Protocol.Types.Integer
+
   defstruct version: 0, # Block version information, based upon the software version creating this block
             previous_block: <<0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0>>, # char[32], The hash value of the previous block this particular block references
             merkle_root: <<0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0>>, # char[32], The reference to a Merkle tree collection which is a hash of all transactions related to this block
