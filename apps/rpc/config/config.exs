@@ -24,6 +24,7 @@ use Mix.Config
 # Configures the RPC connection
 config :rpc,
   rpc_lib: Gold,
+  chain_type: :pos,
   hostname: "localhost",
   port: 8444,
   user: "testnet",

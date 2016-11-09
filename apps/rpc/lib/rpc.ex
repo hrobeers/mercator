@@ -1,6 +1,8 @@
 defmodule Mercator.RPC do
   use Application
 
+  @chain_type Application.get_env(:rpc, :chain_type)
+
   # See http://elixir-lang.org/docs/stable/elixir/Application.html
   # for more information on OTP Applications
   def start(_type, _args) do
@@ -24,5 +26,12 @@ defmodule Mercator.RPC do
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Mercator.RPC.Supervisor]
     Supervisor.start_link(children, opts)
+  end
+
+  def gettransaction!(txnid) do
+    :rpc
+    |> Gold.getrawtransaction!(txnid)
+    |> Base.decode16!(case: :lower)
+    |> Bitcoin.Protocol.Types.Tx.parse(@chain_type == :pos)
   end
 end
