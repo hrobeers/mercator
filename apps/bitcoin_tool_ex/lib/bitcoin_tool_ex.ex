@@ -1,6 +1,5 @@
 defmodule BitcoinTool do
 
-  @network Application.get_env(:bitcoin_tool_ex, :network)
   @bitcoin_tool_bin Application.app_dir(:bitcoin_tool_ex, ["priv", "bitcoin-tool"])
 
   def create_worker!(name, config) do
@@ -13,10 +12,10 @@ defmodule BitcoinTool do
     :stdinout.start_link(name, config |> build_cmd)
   end
 
-  def send!(name, data) do
+  def process!(data, name) do
     case name |> :stdinout.send(data |> String.to_char_list) do
       {:stdout, response} -> response
-      {:stderr, error} ->  raise BitcoinToolError, message: error |> Enum.at(0)
+      {:stderr, [error]} ->  raise BitcoinToolError, message: error
     end
   end
 
