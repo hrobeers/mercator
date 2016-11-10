@@ -8,13 +8,17 @@ defmodule BitcoinTool do
                            id: Atom.to_string(name))
   end
 
+  def start_link(config) do
+    :stdinout.start_link(nil, config |> build_cmd)
+  end
+
   def start_link(name, config) do
     :stdinout.start_link(name, config |> build_cmd)
   end
 
   def process!(data, name) do
     case name |> :stdinout.send(data |> String.to_char_list) do
-      {:stdout, response} -> response
+      {:stdout, [response]} -> response |> BitcoinTool.Result.parse
       {:stderr, [error]} ->  raise BitcoinToolError, message: error
     end
   end
