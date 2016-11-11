@@ -36,6 +36,39 @@ defmodule BitcoinToolTest do
     assert result.private_key_wif_base58check == "cU6CjGw3mRmirjiUZfRkJ1aj2D493k7uuhywj6tCVbLAMABy4MwU"
   end
 
+  test "Uncompressed key generation" do
+    BitcoinTool.start_link(:uncompressed_key_test,
+      %BitcoinTool.Config{
+        input_type: "private-key",
+        input_format: "hex",
+        public_key_compression: "uncompressed"
+      }
+    )
+
+    result =
+    "c23375caa1ba3b0eec3a49fff5e008dede0c2761bb31fddd830da32671c17f84"
+    |> BitcoinTool.process!(:uncompressed_key_test)
+
+    assert result.address_base58check == "PDy6F71ApMcSB9GkCgzcoNfxewYLwq8QkX"
+    assert result.private_key_wif_base58check == "7ACktV3C6PzKsUBXVeEJqKR7pKm6HA3mMqWNcVf3GMsbLtjziHw"
+  end
+
+  test "Generate from public key" do
+    BitcoinTool.start_link(:public_key_test,
+      %BitcoinTool.Config{
+        input_type: "public-key",
+        input_format: "hex",
+        public_key_compression: "compressed"
+      }
+    )
+
+    result =
+    "02b239c40dddff9c5ba613bcc9b40a858fec8b5b9097c0ed2dd7ee799b17aab1e7"
+    |> BitcoinTool.process!(:public_key_test)
+
+    assert result.address_base58check == "PRoUKDUhA1vgBseJCaGMd9AYXdQcyEjxu9"
+  end
+
   test "Should raise error on invalid input" do
     assert_raise BitcoinToolError, fn ->
       BitcoinTool.start_link(:error_test, %BitcoinTool.Config{input_format: "hex"})
