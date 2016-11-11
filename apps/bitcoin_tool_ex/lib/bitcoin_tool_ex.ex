@@ -8,10 +8,6 @@ defmodule BitcoinTool do
                            id: Atom.to_string(name))
   end
 
-  def start_link(config) do
-    :stdinout.start_link(nil, config |> build_cmd)
-  end
-
   def start_link(name, config) do
     :stdinout.start_link(name, config |> build_cmd)
   end
