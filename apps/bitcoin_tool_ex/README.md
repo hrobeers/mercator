@@ -1,24 +1,18 @@
-# BitcoinTool
+# BitcoinToolEx
 
-**TODO: Add description**
+Elixir wrapper for [bitcoin-tool](https://github.com/matja/bitcoin-tool).
+bitcoin-tool is a simple tool written in C to convert Bitcoin keys to addresses, and various other conversions of keys.
 
-## Installation
+## Getting started
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed as:
+### Compilation
+```
+mix deps.get
+mix compile
+```
 
-  1. Add `bitcoin_tool_ex` to your list of dependencies in `mix.exs`:
-
-    ```elixir
-    def deps do
-      [{:bitcoin_tool_ex, "~> 0.1.0"}]
-    end
-    ```
-
-  2. Ensure `bitcoin_tool_ex` is started before your application:
-
-    ```elixir
-    def application do
-      [applications: [:bitcoin_tool_ex]]
-    end
-    ```
-
+### Run unit tests
+The unit tests are the documentation ;)
+```
+mix test
+```
