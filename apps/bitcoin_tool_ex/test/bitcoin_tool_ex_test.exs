@@ -69,6 +69,38 @@ defmodule BitcoinToolTest do
     assert result.address_base58check == "PRoUKDUhA1vgBseJCaGMd9AYXdQcyEjxu9"
   end
 
+  test "Generate from WIF" do
+    BitcoinTool.start_link(:private_key_wif_test,
+      %BitcoinTool.Config{
+        input_type: "private-key-wif",
+        input_format: "base58check",
+        public_key_compression: "uncompressed"
+      }
+    )
+
+    result =
+    "7A6cFXZSZnNUzutCMcuE1hyqDPtysH2LrSA9i5sqP2BPCLrAvZM"
+    |> BitcoinTool.process!(:private_key_wif_test)
+
+    assert result.address_base58check == "PAprodpH5y2YuJFHFCXWRuVzZNr7Tw78sV"
+  end
+
+  test "Generate from hex address" do
+    BitcoinTool.start_link(:address_test,
+      %BitcoinTool.Config{
+        input_type: "address",
+        input_format: "hex",
+        public_key_compression: "uncompressed"
+      }
+    )
+
+    result =
+    "371886c1b6001b8ea23106a08f0d3b640e8497afc7"
+    |> BitcoinTool.process!(:address_test)
+
+    assert result.address_base58check == "PAprodpH5y2YuJFHFCXWRuVzZNr7Tw78sV"
+  end
+
   test "Should raise error on invalid input" do
     assert_raise BitcoinToolError, fn ->
       BitcoinTool.start_link(:error_test, %BitcoinTool.Config{input_format: "hex"})

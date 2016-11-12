@@ -37,7 +37,7 @@ defmodule BitcoinTool.Result do
     { private_key_wif_hex, private_key_wif_base58, private_key_wif_base58check, data } = data
     |> parse_private_key_wif
 
-    { private_key_hex, private_key_base58, private_key_base58check, data } = data
+    { private_key_hex, private_key_base58, private_key_base58check, _data } = data
     |> parse_private_key
 
     %BitcoinTool.Result{

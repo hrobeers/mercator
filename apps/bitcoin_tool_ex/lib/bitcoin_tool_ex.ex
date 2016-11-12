@@ -26,8 +26,16 @@ defmodule BitcoinTool do
       " --input-format " <> config.input_format <>
       " --network " <> config.network <>
       " --output-type all" <>
-      " --public-key-compression " <> config.public_key_compression
+      compression_option(config)
     |> String.to_char_list
+  end
+
+  defp compression_option(config) do
+    # bitcoin-tool doesn't allow compression option for some input types
+    case config.input_type do
+      "private-key-wif" -> ""
+      _ -> " --public-key-compression " <> config.public_key_compression
+    end
   end
 
 end
