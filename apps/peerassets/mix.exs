@@ -38,11 +38,6 @@ defmodule Mercator.PeerAssets.Mixfile do
   @priv_dir "../../_build/#{Mix.env}/lib/peerassets/priv/"
   defp deps do
     [{:rpc, in_umbrella: true},
-     {:exprotobuf, "~> 1.2.1"},
-     {:pa_proto,
-      git: "https://github.com/PeerAssets/rnc.git",
-      app: false,
-      compile: "mkdir -p " <> @priv_dir <> " && cp *.proto " <> @priv_dir
-     }]
+     {:exprotobuf, "~> 1.2.1"}]
   end
 end
