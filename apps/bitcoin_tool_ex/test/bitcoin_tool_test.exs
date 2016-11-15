@@ -2,6 +2,8 @@ defmodule BitcoinToolTest do
   use ExUnit.Case
   doctest BitcoinTool
 
+  alias BitcoinTool.Protocols.Address
+
   test "P2TH peercoin test vector" do
     BitcoinTool.start_link(:p2th_test,
       %BitcoinTool.Config{
@@ -15,7 +17,7 @@ defmodule BitcoinToolTest do
     "c23375caa1ba3b0eec3a49fff5e008dede0c2761bb31fddd830da32671c17f84"
     |> BitcoinTool.process!(:p2th_test)
 
-    assert result.address_base58check == "PRoUKDUhA1vgBseJCaGMd9AYXdQcyEjxu9"
+    assert result |> Address.base58check == "PRoUKDUhA1vgBseJCaGMd9AYXdQcyEjxu9"
     assert result.private_key_wif_base58check == "UBctiEkfxpU2HkyTbRKjiGHT5socJJwCny6ePfUtzo8Jad9wVzeA"
   end
 
@@ -32,7 +34,7 @@ defmodule BitcoinToolTest do
     "c23375caa1ba3b0eec3a49fff5e008dede0c2761bb31fddd830da32671c17f84"
     |> BitcoinTool.process!(:p2th_testnet_test)
 
-    assert result.address_base58check == "mxjFTJApv7sjz9T9a4vCnAQbmsqSoL8VWo"
+    assert result |> Address.base58check == "mxjFTJApv7sjz9T9a4vCnAQbmsqSoL8VWo"
     assert result.private_key_wif_base58check == "cU6CjGw3mRmirjiUZfRkJ1aj2D493k7uuhywj6tCVbLAMABy4MwU"
   end
 
@@ -50,7 +52,7 @@ defmodule BitcoinToolTest do
     "c23375caa1ba3b0eec3a49fff5e008dede0c2761bb31fddd830da32671c17f84"
     |> BitcoinTool.process!(:uncompressed_key_test)
 
-    assert result.address_base58check == "PDy6F71ApMcSB9GkCgzcoNfxewYLwq8QkX"
+    assert result |> Address.base58check == "PDy6F71ApMcSB9GkCgzcoNfxewYLwq8QkX"
     assert result.private_key_wif_base58check == "7ACktV3C6PzKsUBXVeEJqKR7pKm6HA3mMqWNcVf3GMsbLtjziHw"
   end
 
@@ -64,11 +66,12 @@ defmodule BitcoinToolTest do
       }
     )
 
-    result =
+    address =
     "02b239c40dddff9c5ba613bcc9b40a858fec8b5b9097c0ed2dd7ee799b17aab1e7"
     |> BitcoinTool.process!(:public_key_test)
+    |> Address.base58check
 
-    assert result.address_base58check == "PRoUKDUhA1vgBseJCaGMd9AYXdQcyEjxu9"
+    assert address == "PRoUKDUhA1vgBseJCaGMd9AYXdQcyEjxu9"
   end
 
   test "Generate from WIF" do
@@ -81,11 +84,12 @@ defmodule BitcoinToolTest do
       }
     )
 
-    result =
+    address =
     "7A6cFXZSZnNUzutCMcuE1hyqDPtysH2LrSA9i5sqP2BPCLrAvZM"
     |> BitcoinTool.process!(:private_key_wif_test)
+    |> Address.base58check
 
-    assert result.address_base58check == "PAprodpH5y2YuJFHFCXWRuVzZNr7Tw78sV"
+    assert address == "PAprodpH5y2YuJFHFCXWRuVzZNr7Tw78sV"
   end
 
   test "Generate from hex address" do
@@ -98,11 +102,12 @@ defmodule BitcoinToolTest do
       }
     )
 
-    result =
+    address =
     "371886c1b6001b8ea23106a08f0d3b640e8497afc7"
     |> BitcoinTool.process!(:address_test)
+    |> Address.base58check
 
-    assert result.address_base58check == "PAprodpH5y2YuJFHFCXWRuVzZNr7Tw78sV"
+    assert address == "PAprodpH5y2YuJFHFCXWRuVzZNr7Tw78sV"
   end
 
   test "Should raise error on invalid input" do
@@ -118,8 +123,8 @@ defmodule BitcoinToolTest do
     pkh = hex |> Base.decode16!(case: :lower)
     address = pkh |> BitcoinTool.Address.from_pkh(%BitcoinTool.Config{network: "peercoin"})
 
-    assert address.raw == pkh
-    assert address.lazy_hex.() == hex
-    assert address.lazy_base58check.() == "PJsZFe8kFmzBoq5svmfZ9pcGMQ2zDpPpDR"
+    assert address |> Address.raw == pkh
+    assert address |> Address.hex == hex
+    assert address |> Address.base58check == "PJsZFe8kFmzBoq5svmfZ9pcGMQ2zDpPpDR"
   end
 end

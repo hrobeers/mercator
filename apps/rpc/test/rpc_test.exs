@@ -3,6 +3,7 @@ defmodule Mercator.RPCTest do
   doctest Mercator.RPC
 
   alias Bitcoin.Protocol.Types.Script
+  alias BitcoinTool.Protocols.Address
 
   test "getbalance" do
     {:ok, balance} = :rpc |> Gold.getbalance
@@ -27,7 +28,7 @@ defmodule Mercator.RPCTest do
     |> BitcoinTool.Address.from_pkh(%BitcoinTool.Config{network: "peercoin"})
 
     assert result.raw == <<197, 195, 181, 94, 16, 241, 193, 56, 10, 14, 215, 124, 72, 60, 119, 199, 238, 139, 246, 161>>
-    assert result.lazy_base58check.() == "PScript9dhNxV5xHGwwcjknh9sxe6s4tVX"
+    assert result |> Address.base58check == "PScript9dhNxV5xHGwwcjknh9sxe6s4tVX"
   end
 
   test "parse OP_RETURN output scripts" do

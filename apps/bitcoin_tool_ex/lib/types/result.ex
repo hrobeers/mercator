@@ -150,3 +150,9 @@ defmodule BitcoinTool.Result do
     end
   end
 end
+
+defimpl BitcoinTool.Protocols.Address, for: BitcoinTool.Result do
+  def raw(data), do: data.address_hex |> Base.decode16!(case: :lower)
+  def hex(data), do: data.address_hex
+  def base58check(data), do: data.address_base58check
+end
