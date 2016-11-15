@@ -3,7 +3,7 @@ defmodule Mercator.RPCTest do
   doctest Mercator.RPC
 
   alias Bitcoin.Protocol.Types.Script
-  alias BitcoinTool.Protocols.Address
+  alias BitcoinTool.Address
 
   test "getbalance" do
     {:ok, balance} = :rpc |> Gold.getbalance

@@ -5,7 +5,7 @@ defmodule Mercator.PeerAssetsTest do
   alias Mercator.PeerAssets.Repo
   alias Bitcoin.Protocol.Types.Script
   alias Mercator.PeerAssets.Protobufs
-  alias BitcoinTool.Protocols.Address
+  alias BitcoinTool.Address
 
   test "P2TH import" do
     Application.get_env(:peerassets, :PAprod)

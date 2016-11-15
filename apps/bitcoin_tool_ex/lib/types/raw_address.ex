@@ -1,9 +1,9 @@
-defmodule BitcoinTool.Address do
+defmodule BitcoinTool.RawAddress do
   defstruct raw: nil,
             lazy_base58check: nil
 
   def from_pkh(pkh, config) do
-    %BitcoinTool.Address{
+    %BitcoinTool.RawAddress{
       raw: pkh,
       lazy_base58check: fn () ->
         config.network
@@ -15,7 +15,7 @@ defmodule BitcoinTool.Address do
   end
 
   def from_sh(sh, config) do
-    %BitcoinTool.Address{
+    %BitcoinTool.RawAddress{
       raw: sh,
       lazy_base58check: fn () ->
         config.network
@@ -27,7 +27,7 @@ defmodule BitcoinTool.Address do
   end
 end
 
-defimpl BitcoinTool.Protocols.Address, for: BitcoinTool.Address do
+defimpl BitcoinTool.Address, for: BitcoinTool.RawAddress do
   def raw(data), do: data.raw
   def hex(data), do: data.raw |> Base.encode16(case: :lower)
   def base58check(data), do: data.lazy_base58check.()

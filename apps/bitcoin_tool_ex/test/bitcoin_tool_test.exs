@@ -2,7 +2,7 @@ defmodule BitcoinToolTest do
   use ExUnit.Case
   doctest BitcoinTool
 
-  alias BitcoinTool.Protocols.Address
+  alias BitcoinTool.Address
 
   test "P2TH peercoin test vector" do
     BitcoinTool.start_link(:p2th_test,
@@ -118,23 +118,23 @@ defmodule BitcoinToolTest do
     end
   end
 
-  test "Address.from_pkh" do
+  test "RawAddress.from_pkh" do
     hex = "70ca5c06a6b9a47423887043b842e6d93fd49056"
     pkh = hex |> Base.decode16!(case: :lower)
-    address = pkh |> BitcoinTool.Address.from_pkh(%BitcoinTool.Config{network: "peercoin"})
+    raw_address = pkh |> BitcoinTool.RawAddress.from_pkh(%BitcoinTool.Config{network: "peercoin"})
 
-    assert address |> Address.raw == pkh
-    assert address |> Address.hex == hex
-    assert address |> Address.base58check == "PJsZFe8kFmzBoq5svmfZ9pcGMQ2zDpPpDR"
+    assert raw_address |> Address.raw == pkh
+    assert raw_address |> Address.hex == hex
+    assert raw_address |> Address.base58check == "PJsZFe8kFmzBoq5svmfZ9pcGMQ2zDpPpDR"
   end
 
-  test "Address.from_sh" do
+  test "RawAddress.from_sh" do
     hex = "2a02dfd19c9108ad48878a01bfe53deaaf30cca4"
     sh = hex |> Base.decode16!(case: :lower)
-    address = sh |> BitcoinTool.Address.from_sh(%BitcoinTool.Config{network: "peercoin-testnet"})
+    raw_address = sh |> BitcoinTool.RawAddress.from_sh(%BitcoinTool.Config{network: "peercoin-testnet"})
 
-    assert address |> Address.raw == sh
-    assert address |> Address.hex == hex
-    assert address |> Address.base58check == "2Mw5Mp3rxiWU82qJe546eciLb6gp1KieBBx"
+    assert raw_address |> Address.raw == sh
+    assert raw_address |> Address.hex == hex
+    assert raw_address |> Address.base58check == "2Mw5Mp3rxiWU82qJe546eciLb6gp1KieBBx"
   end
 end

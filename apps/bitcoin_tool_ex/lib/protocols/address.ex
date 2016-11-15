@@ -1,4 +1,4 @@
-defprotocol BitcoinTool.Protocols.Address do
+defprotocol BitcoinTool.Address do
   @doc "Returns the raw binary address"
   def raw(data)
   @doc "Returns the hex address"

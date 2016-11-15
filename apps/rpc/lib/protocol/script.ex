@@ -4,7 +4,7 @@ defmodule Bitcoin.Protocol.Types.Script do
     case script do
       # OP_DUP OP_HASH160 20 <pubKeyHash> OP_EQUALVERIFY OP_CHECKSIG
       <<118, 169, 20, pkh :: bytes-size(20), 136, 172>> ->
-        {:ok, pkh |> BitcoinTool.Address.from_pkh(%BitcoinTool.Config{network: network})}
+        {:ok, pkh |> BitcoinTool.RawAddress.from_pkh(%BitcoinTool.Config{network: network})}
       _ ->
         {:error, "Not a P2PKH script"}
     end
