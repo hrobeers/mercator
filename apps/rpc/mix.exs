@@ -36,6 +36,7 @@ defmodule Mercator.RPC.Mixfile do
   #
   # Type "mix help deps" for more examples and options
   defp deps do
-    [{:gold, git: "https://github.com/hrobeers/gold.git", branch: "master"}]
+    [{:gold, git: "https://github.com/hrobeers/gold.git", branch: "master"},
+     {:bitcoin_tool_ex, in_umbrella: true}]
   end
 end

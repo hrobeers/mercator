@@ -41,7 +41,8 @@ defmodule BitcoinToolTest do
       %BitcoinTool.Config{
         input_type: "private-key",
         input_format: "hex",
-        public_key_compression: "uncompressed"
+        public_key_compression: "uncompressed",
+        network: "peercoin"
       }
     )
 
@@ -58,7 +59,8 @@ defmodule BitcoinToolTest do
       %BitcoinTool.Config{
         input_type: "public-key",
         input_format: "hex",
-        public_key_compression: "compressed"
+        public_key_compression: "compressed",
+        network: "peercoin"
       }
     )
 
@@ -74,7 +76,8 @@ defmodule BitcoinToolTest do
       %BitcoinTool.Config{
         input_type: "private-key-wif",
         input_format: "base58check",
-        public_key_compression: "uncompressed"
+        public_key_compression: "uncompressed",
+        network: "peercoin"
       }
     )
 
@@ -90,7 +93,8 @@ defmodule BitcoinToolTest do
       %BitcoinTool.Config{
         input_type: "address",
         input_format: "hex",
-        public_key_compression: "uncompressed"
+        public_key_compression: "uncompressed",
+        network: "peercoin"
       }
     )
 
@@ -103,9 +107,19 @@ defmodule BitcoinToolTest do
 
   test "Should raise error on invalid input" do
     assert_raise BitcoinToolError, fn ->
-      BitcoinTool.start_link(:error_test, %BitcoinTool.Config{input_format: "hex"})
+      BitcoinTool.start_link(:error_test, %BitcoinTool.Config{input_format: "hex", network: "peercoin"})
       "hello" # is not hexadecimal
       |> BitcoinTool.process!(:error_test)
     end
+  end
+
+  test "Address.from_pkh" do
+    hex = "70ca5c06a6b9a47423887043b842e6d93fd49056"
+    pkh = hex |> Base.decode16!(case: :lower)
+    address = pkh |> BitcoinTool.Address.from_pkh(%BitcoinTool.Config{network: "peercoin"})
+
+    assert address.raw == pkh
+    assert address.lazy_hex.() == hex
+    assert address.lazy_base58check.() == "PJsZFe8kFmzBoq5svmfZ9pcGMQ2zDpPpDR"
   end
 end
