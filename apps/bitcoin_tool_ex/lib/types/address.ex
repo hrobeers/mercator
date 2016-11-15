@@ -13,6 +13,18 @@ defmodule BitcoinTool.Address do
       end
     }
   end
+
+  def from_sh(sh, config) do
+    %BitcoinTool.Address{
+      raw: sh,
+      lazy_base58check: fn () ->
+        config.network
+        |> BitcoinTool.Network.get
+        |> Map.get(:script_prefix)
+        |> Base58Check.encode58check(sh)
+      end
+    }
+  end
 end
 
 defimpl BitcoinTool.Protocols.Address, for: BitcoinTool.Address do

@@ -127,4 +127,14 @@ defmodule BitcoinToolTest do
     assert address |> Address.hex == hex
     assert address |> Address.base58check == "PJsZFe8kFmzBoq5svmfZ9pcGMQ2zDpPpDR"
   end
+
+  test "Address.from_sh" do
+    hex = "2a02dfd19c9108ad48878a01bfe53deaaf30cca4"
+    sh = hex |> Base.decode16!(case: :lower)
+    address = sh |> BitcoinTool.Address.from_sh(%BitcoinTool.Config{network: "peercoin-testnet"})
+
+    assert address |> Address.raw == sh
+    assert address |> Address.hex == hex
+    assert address |> Address.base58check == "2Mw5Mp3rxiWU82qJe546eciLb6gp1KieBBx"
+  end
 end
