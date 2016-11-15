@@ -5,6 +5,7 @@ defmodule Mercator.PeerAssetsTest do
   alias Mercator.PeerAssets.Repo
   alias Bitcoin.Protocol.Types.Script
   alias Mercator.PeerAssets.Protobufs
+  alias BitcoinTool.Protocols.Address
 
   test "P2TH import" do
     Application.get_env(:peerassets, :PAprod)
@@ -29,11 +30,12 @@ defmodule Mercator.PeerAssetsTest do
     assert txn.outputs |> Enum.count > 2
 
     # Parse the first output (P2TH)
-    txn.outputs
+    p2th_address = txn.outputs
     |> Enum.at(0)
     |> Map.get(:pk_script)
-    |> Script.parse_p2pkh! # throws on parse failure
-    # TODO assert sender
+    |> Script.parse_p2pkh!("peercoin-testnet") # throws on parse failure
+    |> Address.base58check
+    assert p2th_address == "mwqncWSnzUzouPZcLQWcLTPuSVq3rSiAAa" # PAtest address on testnet
 
     # Parse the second output (OP_RETURN PeerAssets data)
     pa_data = txn.outputs

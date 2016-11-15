@@ -24,8 +24,7 @@ defmodule Mercator.RPCTest do
   test "parse P2PKH output script" do
     result = "76a914c5c3b55e10f1c1380a0ed77c483c77c7ee8bf6a188ac"
     |> Base.decode16!(case: :lower)
-    |> Script.parse_p2pkh!
-    |> BitcoinTool.Address.from_pkh(%BitcoinTool.Config{network: "peercoin"})
+    |> Script.parse_p2pkh!("peercoin")
 
     assert result.raw == <<197, 195, 181, 94, 16, 241, 193, 56, 10, 14, 215, 124, 72, 60, 119, 199, 238, 139, 246, 161>>
     assert result |> Address.base58check == "PScript9dhNxV5xHGwwcjknh9sxe6s4tVX"
