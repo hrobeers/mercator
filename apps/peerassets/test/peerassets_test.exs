@@ -26,21 +26,17 @@ defmodule Mercator.PeerAssetsTest do
   test "Decode deck spawn txn" do
     # Decoding the PeerAssets challenge transaction: https://www.peercointalk.org/index.php?topic=4760.0
     txn = Mercator.RPC.gettransaction!("356b9736ee7dbf387ea7b10a16beda8ea1ad5db0cbc53e749f5e4b3cf7545552")
-    # Assert this can be a deck spawn txn
-    assert txn.outputs |> Enum.count > 2
+
+    [p2th_output, pa_data_output, _] = txn.outputs
 
     # Parse the first output (P2TH)
-    p2th_address = txn.outputs
-    |> Enum.at(0)
-    |> Map.get(:pk_script)
-    |> Script.parse_p2pkh!("peercoin-testnet") # throws on parse failure
+    p2th_address = p2th_output
+    |> Script.parse_address!("peercoin-testnet") # throws on parse failure
     |> Address.base58check
     assert p2th_address == "mwqncWSnzUzouPZcLQWcLTPuSVq3rSiAAa" # PAtest address on testnet
 
     # Parse the second output (OP_RETURN PeerAssets data)
-    pa_data = txn.outputs
-    |> Enum.at(1)
-    |> Map.get(:pk_script)
+    pa_data = pa_data_output
     |> Script.parse_opreturn! # throws on parse failure
     |> Protobufs.DeckSpawn.decode
     assert pa_data.version == 1

@@ -1,17 +1,21 @@
 defmodule Bitcoin.Protocol.Types.Script do
 
-  def parse_p2pkh(script, network \\ nil) do
+  alias Bitcoin.Protocol.Types.TransactionOutput
+
+  def parse_address(%TransactionOutput{pk_script: script}, network \\ nil) do
     case script do
-      # OP_DUP OP_HASH160 20 <pubKeyHash> OP_EQUALVERIFY OP_CHECKSIG
+      # P2PKH output: OP_DUP OP_HASH160 20 <pubKeyHash> OP_EQUALVERIFY OP_CHECKSIG
       <<118, 169, 20, pkh :: bytes-size(20), 136, 172>> ->
         {:ok, pkh |> BitcoinTool.RawAddress.from_pkh(%BitcoinTool.Config{network: network})}
+
+      # Unmatched
       _ ->
-        {:error, "Not a P2PKH script"}
+        {:error, "Unable to parse address from output"}
     end
   end
 
-  def parse_p2pkh!(script, network \\ nil) do
-    case parse_p2pkh(script, network) do
+  def parse_address!(in_output, network \\ nil) do
+    case parse_address(in_output, network) do
       {:ok, result} -> result
       {:error, err} -> raise err
     end
@@ -36,7 +40,7 @@ defmodule Bitcoin.Protocol.Types.Script do
     end
   end
 
-  def parse_opreturn!(script) do
+  def parse_opreturn!(%TransactionOutput{pk_script: script}) do
     case parse_opreturn(script) do
       {:ok, result} -> result
       {:error, err} -> raise err
