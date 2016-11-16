@@ -27,11 +27,18 @@ defmodule Mercator.PeerAssetsTest do
     # Decoding the PeerAssets challenge transaction: https://www.peercointalk.org/index.php?topic=4760.0
     txn = Mercator.RPC.gettransaction!("356b9736ee7dbf387ea7b10a16beda8ea1ad5db0cbc53e749f5e4b3cf7545552")
 
+    [owner_input] = txn.inputs
     [p2th_output, pa_data_output, _] = txn.outputs
+
+    # Parse the first input (from owner address)
+    owner_address = owner_input
+    |> Script.parse_address! # throws on parse failure
+    |> Address.base58check
+    assert owner_address == "mpwRGC6URPCvdU4J83YbUzvqmBhKSDXk4p"
 
     # Parse the first output (P2TH)
     p2th_address = p2th_output
-    |> Script.parse_address!("peercoin-testnet") # throws on parse failure
+    |> Script.parse_address! # throws on parse failure
     |> Address.base58check
     assert p2th_address == "mwqncWSnzUzouPZcLQWcLTPuSVq3rSiAAa" # PAtest address on testnet
 
