@@ -18,8 +18,14 @@ defmodule Mercator.RPC do
                  port: Application.get_env(:rpc, :port),
                  user: Application.get_env(:rpc, :user),
                  password: Application.get_env(:rpc, :password)},
-              :rpc]
-      )
+              :rpc]),
+      BitcoinTool.create_worker!(:pubkey_hex_compressed,
+                                 %BitcoinTool.Config{
+                                   input_type: "public-key",
+                                   input_format: "hex",
+                                   network: Application.get_env(:rpc, :network),
+                                   public_key_compression: "compressed"
+                                 })
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html

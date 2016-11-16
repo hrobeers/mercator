@@ -1,12 +1,17 @@
 defmodule Bitcoin.Protocol.Types.Script do
 
+  alias Bitcoin.Protocol.Types.TransactionInput
   alias Bitcoin.Protocol.Types.TransactionOutput
 
-  def parse_address(%TransactionOutput{pk_script: script}, network \\ nil) do
+  @network Application.get_env(:rpc, :network)
+
+  # TODO: P2SH in/out, P2PK in/out
+
+  def parse_address(%TransactionOutput{pk_script: script}) do
     case script do
       # P2PKH output: OP_DUP OP_HASH160 20 <pubKeyHash> OP_EQUALVERIFY OP_CHECKSIG
       <<118, 169, 20, pkh :: bytes-size(20), 136, 172>> ->
-        {:ok, pkh |> BitcoinTool.RawAddress.from_pkh(%BitcoinTool.Config{network: network})}
+        {:ok, pkh |> BitcoinTool.RawAddress.from_pkh(%BitcoinTool.Config{network: @network})}
 
       # Unmatched
       _ ->
@@ -14,8 +19,27 @@ defmodule Bitcoin.Protocol.Types.Script do
     end
   end
 
-  def parse_address!(in_output, network \\ nil) do
-    case parse_address(in_output, network) do
+  def parse_address(%TransactionInput{signature_script: script}) do
+    case script do
+      # P2PKH input (compressed): sig_size <signature> 33 <pubkey>
+      <<sig_size, _sig :: bytes-size(sig_size), 33, pk :: bytes-size(33)>> ->
+        address = pk
+        |> Base.encode16(case: :lower)
+        |> BitcoinTool.process!(:pubkey_hex_compressed)
+        {:ok, address }
+
+      # P2PKH input (uncompressed): sig_size <signature> 65 <pubkey>
+      <<sig_size, _sig :: bytes-size(sig_size), 65, pk :: bytes-size(65)>> ->
+        {:not_implemented, pk}
+
+      # Unmatched
+      _ ->
+        {:error, "Unable to parse address from script"}
+    end
+  end
+
+  def parse_address!(in_output) do
+    case parse_address(in_output) do
       {:ok, result} -> result
       {:error, err} -> raise err
     end

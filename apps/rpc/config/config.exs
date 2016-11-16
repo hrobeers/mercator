@@ -25,6 +25,7 @@ use Mix.Config
 config :rpc,
   rpc_lib: Gold,
   chain_type: :pos,
+  network: "peercoin-testnet",
   hostname: "localhost",
   port: 8444,
   user: "testnet",

@@ -22,12 +22,20 @@ defmodule Mercator.RPCTest do
   end
 
   test "parse address from P2PKH output" do
-    result = "76a914c5c3b55e10f1c1380a0ed77c483c77c7ee8bf6a188ac"
+    address = "76a914c5c3b55e10f1c1380a0ed77c483c77c7ee8bf6a188ac"
     |> script_to_txout
-    |> Script.parse_address!("peercoin")
+    |> Script.parse_address!
 
-    assert result |> Address.raw == <<197, 195, 181, 94, 16, 241, 193, 56, 10, 14, 215, 124, 72, 60, 119, 199, 238, 139, 246, 161>>
-    assert result |> Address.base58check == "PScript9dhNxV5xHGwwcjknh9sxe6s4tVX"
+    assert address |> Address.raw == <<197, 195, 181, 94, 16, 241, 193, 56, 10, 14, 215, 124, 72, 60, 119, 199, 238, 139, 246, 161>>
+    assert address |> Address.base58check == "myYdruaHPoL2HMm8eSbTtn2kQ8PTuZSoYJ"
+  end
+
+  test "parse address from compressed P2PKH input" do
+    address = "47304402201668e9ca285d1c53f5e9ce6fcbc8cf7f4f10de195c2d6f62508c8cd4ed6a8b4a0220687154d0f6722d915532d074154fc307d68ce8262c95c89930a4e9afa2502aac0121029ccc974c232080cdb53e4bf40d72c70311b6e0d184edbd9459ce222c4a64f752"
+    |> script_to_txin
+    |> Script.parse_address!
+
+    assert address |> Address.base58check == "mnnHbwi92SakcQNj8ixRRN4xe5pfmc3oxV"
   end
 
   test "parse data from OP_RETURN output" do
@@ -53,6 +61,12 @@ defmodule Mercator.RPCTest do
   defp script_to_txout(script_hex) do
     %Bitcoin.Protocol.Types.TransactionOutput{
       pk_script: script_hex |> Base.decode16!(case: :lower)
+    }
+  end
+
+  defp script_to_txin(script_hex) do
+    %Bitcoin.Protocol.Types.TransactionInput{
+      signature_script: script_hex |> Base.decode16!(case: :lower)
     }
   end
 end
