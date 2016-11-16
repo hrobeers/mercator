@@ -38,6 +38,14 @@ defmodule Mercator.RPCTest do
     assert address |> Address.base58check == "mnnHbwi92SakcQNj8ixRRN4xe5pfmc3oxV"
   end
 
+  test "parse address from uncompressed P2PKH input" do
+    address = "483045022100ed64dc0c66c230b2e0e104b4976188d17d818606cdcd0e3e262fb4a8ac0b7c9202207a3dc0dbd55180496f96656079f4fc6fdf30beea889f9d2847f2d3cf45903e570141045d6d4668791141b1cedf149bda8905a5fd3d468ebed4a104748f1a2d0c641a4b18633810318a8170d807437d6c0988d9eb72b64ce364b01615a2a397c2ea788b"
+    |> script_to_txin
+    |> Script.parse_address!
+
+    assert address |> Address.base58check == "mr9U9teYPd3A3HyPkF6YcvPso4bUzVsZ1a"
+  end
+
   test "parse data from OP_RETURN output" do
     # length < 76
     short_string = "6a0e612073686f727420737472696e67"

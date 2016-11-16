@@ -30,7 +30,10 @@ defmodule Bitcoin.Protocol.Types.Script do
 
       # P2PKH input (uncompressed): sig_size <signature> 65 <pubkey>
       <<sig_size, _sig :: bytes-size(sig_size), 65, pk :: bytes-size(65)>> ->
-        {:not_implemented, pk}
+        address = pk
+        |> Base.encode16(case: :lower)
+        |> BitcoinTool.process!(:pubkey_hex_uncompressed)
+        {:ok, address }
 
       # Unmatched
       _ ->

@@ -2,6 +2,7 @@ defmodule Mercator.RPC do
   use Application
 
   @chain_type Application.get_env(:rpc, :chain_type)
+  @network Application.get_env(:rpc, :network)
 
   # See http://elixir-lang.org/docs/stable/elixir/Application.html
   # for more information on OTP Applications
@@ -23,8 +24,15 @@ defmodule Mercator.RPC do
                                  %BitcoinTool.Config{
                                    input_type: "public-key",
                                    input_format: "hex",
-                                   network: Application.get_env(:rpc, :network),
+                                   network: @network,
                                    public_key_compression: "compressed"
+                                 }),
+      BitcoinTool.create_worker!(:pubkey_hex_uncompressed,
+                                 %BitcoinTool.Config{
+                                   input_type: "public-key",
+                                   input_format: "hex",
+                                   network: @network,
+                                   public_key_compression: "uncompressed"
                                  })
     ]
 
