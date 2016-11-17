@@ -2,6 +2,8 @@ defmodule Bitcoin.Protocol.Types.Script do
 
   alias Bitcoin.Protocol.Types.TransactionInput
   alias Bitcoin.Protocol.Types.TransactionOutput
+  alias Bitcoin.Protocol.Types.Outpoint
+  alias Mercator.RPC
 
   @network Application.get_env(:rpc, :network)
 
@@ -33,7 +35,7 @@ defmodule Bitcoin.Protocol.Types.Script do
     end
   end
 
-  def parse_address(%TransactionInput{signature_script: script}) do
+  def parse_address(%TransactionInput{signature_script: script, previous_output: prev_out}) do
     case script do
       # P2PKH input (compressed): sig_size <signature> 33 <pubkey>
       <<sig_size, _sig :: bytes-size(sig_size), 33, pk :: bytes-size(33)>> ->
@@ -49,10 +51,25 @@ defmodule Bitcoin.Protocol.Types.Script do
         |> BitcoinTool.process!(:pubkey_hex)
         {:ok, address }
 
+      # P2PK input: sig_size <signature>
+      <<sig_size, _sig :: bytes-size(sig_size)>> ->
+        prev_out |> parse_address
+
       # Unmatched
       _ ->
         {:error, "Unable to parse address from script"}
     end
+  end
+
+  def parse_address(%Outpoint{hash: hash, index: index}) do
+    prev_txn = hash
+    |> :binary.bin_to_list |> Enum.reverse |> :binary.list_to_bin
+    |> Base.encode16(case: :lower)
+    |> RPC.gettransaction!
+
+    prev_txn.outputs
+    |> Enum.at(index)
+    |> parse_address
   end
 
   def parse_address!(in_output) do

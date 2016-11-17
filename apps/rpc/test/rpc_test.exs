@@ -3,6 +3,7 @@ defmodule Mercator.RPCTest do
   doctest Mercator.RPC
 
   alias Bitcoin.Protocol.Types.Script
+  alias Bitcoin.Protocol.Types.TransactionInput
   alias BitcoinTool.Address
 
   test "getbalance" do
@@ -60,6 +61,16 @@ defmodule Mercator.RPCTest do
     |> Script.parse_address!
 
     assert address |> Address.base58check == "mr9U9teYPd3A3HyPkF6YcvPso4bUzVsZ1a"
+  end
+
+  test "parse P2PK input" do
+    address = "42cdee67468cc874199e0f9c4ec615a419ed9b9c26fda68e523b63e02d4603890000000049483045022100f315bc9f149995b5120cb69dc8fe3c2a2aa02e7b68c4fe4b63505535710346ad022006d96467a527f2fdfd886b034576da23c9675b29241f78903166a8400f15f61801ffffffff"
+    |> Base.decode16!(case: :lower)
+    |> TransactionInput.parse_stream
+    |> hd
+    |> Script.parse_address!
+
+    assert address |> Address.base58check == "mpwRGC6URPCvdU4J83YbUzvqmBhKSDXk4p"
   end
 
   test "parse data from OP_RETURN output" do
