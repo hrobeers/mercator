@@ -20,19 +20,11 @@ defmodule Mercator.RPC do
                  user: Application.get_env(:rpc, :user),
                  password: Application.get_env(:rpc, :password)},
               :rpc]),
-      BitcoinTool.create_worker!(:pubkey_hex_compressed,
+      BitcoinTool.create_worker!(:pubkey_hex,
                                  %BitcoinTool.Config{
                                    input_type: "public-key",
                                    input_format: "hex",
-                                   network: @network,
-                                   public_key_compression: "compressed"
-                                 }),
-      BitcoinTool.create_worker!(:pubkey_hex_uncompressed,
-                                 %BitcoinTool.Config{
-                                   input_type: "public-key",
-                                   input_format: "hex",
-                                   network: @network,
-                                   public_key_compression: "uncompressed"
+                                   network: @network
                                  })
     ]
 

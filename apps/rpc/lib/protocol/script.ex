@@ -13,6 +13,20 @@ defmodule Bitcoin.Protocol.Types.Script do
       <<118, 169, 20, pkh :: bytes-size(20), 136, 172>> ->
         {:ok, pkh |> BitcoinTool.RawAddress.from_pkh(%BitcoinTool.Config{network: @network})}
 
+      # P2PK output (compressed): 33 <pubkey> OP_CHECKSIG
+      <<33, pk :: bytes-size(33), 172>> ->
+        address = pk
+        |> Base.encode16(case: :lower)
+        |> BitcoinTool.process!(:pubkey_hex)
+        {:ok, address }
+
+      # P2PK output (uncompressed): 65 <pubkey> OP_CHECKSIG
+      <<65, pk :: bytes-size(65), 172>> ->
+        address = pk
+        |> Base.encode16(case: :lower)
+        |> BitcoinTool.process!(:pubkey_hex)
+        {:ok, address }
+
       # Unmatched
       _ ->
         {:error, "Unable to parse address from output"}
@@ -25,14 +39,14 @@ defmodule Bitcoin.Protocol.Types.Script do
       <<sig_size, _sig :: bytes-size(sig_size), 33, pk :: bytes-size(33)>> ->
         address = pk
         |> Base.encode16(case: :lower)
-        |> BitcoinTool.process!(:pubkey_hex_compressed)
+        |> BitcoinTool.process!(:pubkey_hex)
         {:ok, address }
 
       # P2PKH input (uncompressed): sig_size <signature> 65 <pubkey>
       <<sig_size, _sig :: bytes-size(sig_size), 65, pk :: bytes-size(65)>> ->
         address = pk
         |> Base.encode16(case: :lower)
-        |> BitcoinTool.process!(:pubkey_hex_uncompressed)
+        |> BitcoinTool.process!(:pubkey_hex)
         {:ok, address }
 
       # Unmatched
