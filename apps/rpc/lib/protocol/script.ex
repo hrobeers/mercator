@@ -7,7 +7,7 @@ defmodule Bitcoin.Protocol.Types.Script do
 
   @network Application.get_env(:rpc, :network)
 
-  # TODO: P2SH in/out, P2PK in/out
+  # TODO: P2SH in/out
 
   def parse_address(%TransactionOutput{pk_script: script}) do
     case script do
@@ -17,17 +17,11 @@ defmodule Bitcoin.Protocol.Types.Script do
 
       # P2PK output (compressed): 33 <pubkey> OP_CHECKSIG
       <<33, pk :: bytes-size(33), 172>> ->
-        address = pk
-        |> Base.encode16(case: :lower)
-        |> BitcoinTool.process!(:pubkey_hex)
-        {:ok, address }
+        pk |> pubkey_to_address
 
       # P2PK output (uncompressed): 65 <pubkey> OP_CHECKSIG
       <<65, pk :: bytes-size(65), 172>> ->
-        address = pk
-        |> Base.encode16(case: :lower)
-        |> BitcoinTool.process!(:pubkey_hex)
-        {:ok, address }
+        pk |> pubkey_to_address
 
       # Unmatched
       _ ->
@@ -39,17 +33,11 @@ defmodule Bitcoin.Protocol.Types.Script do
     case script do
       # P2PKH input (compressed): sig_size <signature> 33 <pubkey>
       <<sig_size, _sig :: bytes-size(sig_size), 33, pk :: bytes-size(33)>> ->
-        address = pk
-        |> Base.encode16(case: :lower)
-        |> BitcoinTool.process!(:pubkey_hex)
-        {:ok, address }
+        pk |> pubkey_to_address
 
       # P2PKH input (uncompressed): sig_size <signature> 65 <pubkey>
       <<sig_size, _sig :: bytes-size(sig_size), 65, pk :: bytes-size(65)>> ->
-        address = pk
-        |> Base.encode16(case: :lower)
-        |> BitcoinTool.process!(:pubkey_hex)
-        {:ok, address }
+        pk |> pubkey_to_address
 
       # P2PK input: sig_size <signature>
       <<sig_size, _sig :: bytes-size(sig_size)>> ->
@@ -103,6 +91,13 @@ defmodule Bitcoin.Protocol.Types.Script do
       {:ok, result} -> result
       {:error, err} -> raise err
     end
+  end
+
+  defp pubkey_to_address(pubkey) do
+    address = pubkey
+    |> Base.encode16(case: :lower)
+    |> BitcoinTool.process!(:pubkey_hex)
+    {:ok, address }
   end
 
 end
