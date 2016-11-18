@@ -22,6 +22,7 @@ use Mix.Config
 #
 
 config :peerassets,
+  reload_interval: 1000,
   PAprod: %{label: "PAprod",
             address: "PAprodpH5y2YuJFHFCXWRuVzZNr7Tw78sV",
             wif: "7A6cFXZSZnNUzutCMcuE1hyqDPtysH2LrSA9i5sqP2BPCLrAvZM"},

@@ -3,6 +3,7 @@ defmodule Mercator.PeerAssets.Repo do
 
   alias Mercator.PeerAssets.Types.DeckSpawn
 
+  @reload_interval Application.get_env(:peerassets, :reload_interval)
   @prod_tag Application.get_env(:peerassets, :PAprod)
   @test_tag Application.get_env(:peerassets, :PAtest)
 
@@ -40,14 +41,31 @@ defmodule Mercator.PeerAssets.Repo do
   def init(:ok) do
     load_tag!(@prod_tag)
     load_tag!(@test_tag)
-    {:ok,
-     %{PAprod: load_assets!(@prod_tag),
-       PAtest: load_assets!(@test_tag)}
-    }
+    reload_assets(1)
+    {:ok, %{block_cnt: 0}}
   end
 
   def handle_call({:list_assets, net}, _from, state) do
     {:reply, Map.fetch(state, net), state}
+  end
+
+  defp reload_assets(timeout) do
+    Process.send_after(self(), :reload, timeout)
+  end
+  def handle_info(:reload, state) do
+    block_cnt = :rpc |> Gold.getblockcount!
+
+    state = cond do
+      Map.get(state, :block_cnt) == block_cnt ->
+        state # no changes
+      true ->
+        %{block_cnt: block_cnt,
+          PAprod: load_assets!(@prod_tag),
+          PAtest: load_assets!(@test_tag)}
+    end
+
+    reload_assets(@reload_interval)
+    {:noreply, state}
   end
 
   ## Private

@@ -33,6 +33,8 @@ defmodule Mocks.Gold do
     case method do
       :getbalance -> {:reply, {:ok, 10.0}, state}
 
+      :getblockcount -> {:reply, {:ok, 12345}, state}
+
       :getaddressesbyaccount ->
         case params do
           [label] -> {:reply, {:ok, state |> Map.get(label, [])}, state}
