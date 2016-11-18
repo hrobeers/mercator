@@ -61,6 +61,19 @@ defmodule Mocks.Gold do
           _ -> {:error, {:error}, state}
         end
 
+      :listtransactions ->
+        case params do
+          ["PAtest", _cnt, 0] ->
+            {:reply, {:ok, [%{"account" => "PAtest", "address" => "mwqncWSnzUzouPZcLQWcLTPuSVq3rSiAAa",
+                              "amount" => 0.01,
+                              "blockhash" => "0000000037fc24cc5f769a74aa5ce4c7501ede10369b94ba3f2fdc79d28ffe85",
+                              "blockindex" => 1, "category" => "receive", "confirmations" => 4595,
+                              "time" => 1476987122,
+                              "txid" => "356b9736ee7dbf387ea7b10a16beda8ea1ad5db0cbc53e749f5e4b3cf7545552"}]},
+            state}
+          _ -> {:reply, {:ok, []}, state}
+        end
+
       _ -> {:error, to_string(method) <> " not mocked"}
     end
   end

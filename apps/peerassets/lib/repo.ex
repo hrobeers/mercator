@@ -1,8 +1,13 @@
 defmodule Mercator.PeerAssets.Repo do
   use GenServer
 
+  alias Mercator.PeerAssets.Types.DeckSpawn
+
   @prod_tag Application.get_env(:peerassets, :PAprod)
   @test_tag Application.get_env(:peerassets, :PAtest)
+
+  @tag_fee Gold.btc_to_decimal(0.01)
+  @listtxn_size if Mix.env == :test, do: 2, else: 10
 
   ## Client API
 
@@ -11,6 +16,13 @@ defmodule Mercator.PeerAssets.Repo do
   """
   def start_link do
     GenServer.start_link(__MODULE__, :ok, name: :pa_repo)
+  end
+
+  @doc """
+  Returns a list of registered assets.
+  """
+  def list_assets(net \\ :PAprod) do
+    GenServer.call(:pa_repo, {:list_assets, net})
   end
 
   @doc """
@@ -23,6 +35,23 @@ defmodule Mercator.PeerAssets.Repo do
     end
   end
 
+  ## Server Callbacks
+
+  def init(:ok) do
+    load_tag!(@prod_tag)
+    load_tag!(@test_tag)
+    {:ok,
+     %{PAprod: load_assets!(@prod_tag),
+       PAtest: load_assets!(@test_tag)}
+    }
+  end
+
+  def handle_call({:list_assets, net}, _from, state) do
+    {:reply, Map.fetch(state, net), state}
+  end
+
+  ## Private
+
   defp tag_loaded?(tag) do
     case :rpc
       |> Gold.getaddressesbyaccount!(tag.label)
@@ -32,24 +61,41 @@ defmodule Mercator.PeerAssets.Repo do
     end
   end
 
-  ## Server Callbacks
-
-  def init(:ok) do
-    load_tag!(@prod_tag)
-    load_tag!(@test_tag)
-    {:ok, %{}}
+  defp load_assets!(tag) do
+    [] |> load_assets!(0, tag)
   end
 
-  def handle_call({:lookup, name}, _from, names) do
-    {:reply, Map.fetch(names, name), names}
+  defp load_assets!(assets, full_cnt, tag) do
+    new_assets = :rpc
+    |> Gold.listtransactions!(tag.label, @listtxn_size, full_cnt)
+
+    [new_assets | assets]
+    |> load_more_assets!(full_cnt+@listtxn_size, tag)
   end
 
-  def handle_cast({:create, name}, names) do
-    if Map.has_key?(names, name) do
-      {:noreply, names}
-    else
-#      {:ok, bucket} = KV.Bucket.start_link
-      {:noreply} #, Map.put(names, name, bucket)}
-    end
+  defp load_more_assets!([[] | assets], _full_cnt, _tag) do
+    parsed = assets
+    |> Enum.reverse
+    |> List.flatten
+    |> Enum.filter_map(&(sufficient_tag_fee(&1)),
+      fn(%Gold.Transaction{txid: txid}) ->
+        txid
+        |> Mercator.RPC.gettransaction!
+        |> DeckSpawn.parse_txn
+      end)
+
+    # Filter for successfully parsed
+    for {:ok, valid} <- parsed, do: valid
   end
+
+  defp load_more_assets!(assets, full_cnt, tag) do
+    assets |> load_assets!(full_cnt, tag)
+  end
+
+  defp sufficient_tag_fee(%Gold.Transaction{amount: amount}) do
+    amount
+    |> Decimal.compare(@tag_fee)
+    |> Decimal.to_integer != -1
+  end
+
 end

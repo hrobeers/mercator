@@ -13,6 +13,14 @@ defmodule Mercator.PeerAssets.Types.DeckSpawn do
             short_name: nil,
             asset_specific_data: nil
 
+  def parse_txn(txn) do
+    try do
+      {:ok, parse_txn!(txn)}
+    catch
+      _, err -> {:error, err}
+    end
+  end
+
   def parse_txn!(txn) do
     [owner_input | _] = txn.inputs
     [p2th_output, pa_data_output | _] = txn.outputs
