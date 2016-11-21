@@ -91,7 +91,7 @@ defmodule Mercator.PeerAssets.Repo do
     |> load_more_assets!(full_cnt+@listtxn_size, tag)
   end
 
-  defp load_more_assets!([[] | assets], _full_cnt, _tag) do
+  defp load_more_assets!([[] | assets], _full_cnt, tag) do
     parsed = assets
     |> Enum.reverse
     |> List.flatten
@@ -103,7 +103,12 @@ defmodule Mercator.PeerAssets.Repo do
       end)
 
     # Filter for successfully parsed
-    for {:ok, valid} <- parsed, do: valid
+    success = for {:ok, valid} <- parsed, do: valid
+
+    # Filter for correctly placed tag (some may refer both PAprod & PAtest)
+    # TODO: add such a case to official test vectors
+    success
+    |> Enum.filter(&(&1.tag_address == tag.address))
   end
 
   defp load_more_assets!(assets, full_cnt, tag) do

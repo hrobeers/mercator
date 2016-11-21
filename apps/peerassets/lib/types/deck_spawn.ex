@@ -6,7 +6,8 @@ defmodule Mercator.PeerAssets.Types.DeckSpawn do
   alias BitcoinTool.Address
   alias Mercator.PeerAssets.Protobufs.DeckSpawn.MODE
 
-  defstruct owner_address: nil,
+  defstruct asset_id: nil,
+            owner_address: nil,
             tag_address: nil,
             issue_modes: nil,
             number_of_decimals: nil,
@@ -41,6 +42,7 @@ defmodule Mercator.PeerAssets.Types.DeckSpawn do
     |> Protobufs.DeckSpawn.decode
 
     %Mercator.PeerAssets.Types.DeckSpawn{
+      asset_id: txn.txid,
       owner_address: owner_address,
       tag_address: p2th_address,
       issue_modes: parse_modes!(pa_data.issue_mode),
