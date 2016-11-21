@@ -39,10 +39,18 @@ defmodule Mercator.PeerAssets.Repo do
   ## Server Callbacks
 
   def init(:ok) do
-    load_tag!(@prod_tag)
-    load_tag!(@test_tag)
-    reload_assets(1)
-    {:ok, %{block_cnt: 0}}
+    try do
+      load_tag!(@prod_tag)
+      load_tag!(@test_tag)
+      reload_assets(1)
+      {:ok, %{block_cnt: 0}}
+    rescue
+      _ ->
+        # TODO log
+        # Block synchronously until connection is established
+        :timer.sleep(1000)
+        init(:ok)
+    end
   end
 
   def handle_call({:list_assets, net}, _from, state) do
