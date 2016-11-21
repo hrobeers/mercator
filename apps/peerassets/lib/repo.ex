@@ -53,19 +53,24 @@ defmodule Mercator.PeerAssets.Repo do
     Process.send_after(self(), :reload, timeout)
   end
   def handle_info(:reload, state) do
-    block_cnt = :rpc |> Gold.getblockcount!
-
-    state = cond do
-      Map.get(state, :block_cnt) == block_cnt ->
-        state # no changes
-      true ->
-        %{block_cnt: block_cnt,
-          PAprod: load_assets!(@prod_tag),
-          PAtest: load_assets!(@test_tag)}
-    end
+    new_state =
+      case :rpc |> Gold.getblockcount do
+        {:ok, block_cnt} ->
+          cond do
+            Map.get(state, :block_cnt) == block_cnt ->
+              state # no changes
+            true ->
+              %{block_cnt: block_cnt,
+                PAprod: load_assets!(@prod_tag),
+                PAtest: load_assets!(@test_tag)}
+          end
+        {:error, _} ->
+          # TODO: log error
+          state # no connection, just ignore until restored
+      end
 
     reload_assets(@reload_interval)
-    {:noreply, state}
+    {:noreply, new_state}
   end
 
   ## Private
