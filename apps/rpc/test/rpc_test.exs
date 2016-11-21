@@ -15,6 +15,7 @@ defmodule Mercator.RPCTest do
 
   test "decode raw transaction" do
     txn = Mercator.RPC.gettransaction!("9d4263fdc91aa2bbcdc4f24e4d8296c0045f23362d3cfa5821118d5f1501fafc")
+    assert txn.txid == "9d4263fdc91aa2bbcdc4f24e4d8296c0045f23362d3cfa5821118d5f1501fafc"
     assert txn.timestamp > 0
     assert Enum.count(txn.inputs) == 1
     assert Enum.count(txn.outputs) == 2

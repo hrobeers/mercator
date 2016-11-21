@@ -38,6 +38,6 @@ defmodule Mercator.RPC do
     :rpc
     |> Gold.getrawtransaction!(txnid)
     |> Base.decode16!(case: :lower)
-    |> Bitcoin.Protocol.Types.Tx.parse(@chain_type == :pos)
+    |> Bitcoin.Protocol.Types.Tx.parse(txnid, @chain_type == :pos)
   end
 end

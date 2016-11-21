@@ -10,7 +10,8 @@ defmodule Bitcoin.Protocol.Types.Tx do
   alias Bitcoin.Protocol.Types.TransactionInput
   alias Bitcoin.Protocol.Types.TransactionOutput
 
-  defstruct version: 0,  # Transaction data format version
+  defstruct txid: nil,   # Transaction id (hexadecimal)
+            version: 0,  # Transaction data format version
             timestamp: 0,# Transaction timestamp, only available on ppcoin forks
             inputs: [],  # A list of 1 or more transaction inputs or sources for coins
             outputs: [], # A list of 1 or more transaction outputs or destinations for coins
@@ -28,11 +29,12 @@ defmodule Bitcoin.Protocol.Types.Tx do
     lock_time: non_neg_integer
   }
 
-  def parse(data) do
-    parse(data, false)
+  # TODO: calculate txid from data
+  def parse(data, txid) do
+    parse(data, txid, false)
   end
 
-  def parse(data, has_timestamp) do
+  def parse(data, txid, has_timestamp) do
 
     {version, timestamp, payload} = parse_version_and_timestamp(data, has_timestamp)
 
@@ -53,6 +55,7 @@ defmodule Bitcoin.Protocol.Types.Tx do
     <<lock_time::unsigned-little-integer-size(32)>> = payload
 
     %Bitcoin.Protocol.Types.Tx{
+      txid: txid,
       version: version,
       timestamp: timestamp,
       inputs: transaction_inputs,
