@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   id="svg4203"
+   version="1.1"
+   inkscape:version="0.91 r13725"
+   width="728"
+   height="99"
+   viewBox="0 0 728 99"
+   sodipodi:docname="banner.svg"
+   inkscape:export-filename="/home/hans/development/crypto/mercator/apps/web/web/static/assets/images/banner.png"
+   inkscape:export-xdpi="310.36301"
+   inkscape:export-ydpi="310.36301">
+  <metadata
+     id="metadata4209">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs4207" />
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1366"
+     inkscape:window-height="732"
+     id="namedview4205"
+     showgrid="false"
+     inkscape:zoom="1.1153846"
+     inkscape:cx="364"
+     inkscape:cy="13.637931"
+     inkscape:window-x="0"
+     inkscape:window-y="17"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer5" />
+  <g
+     inkscape:groupmode="layer"
+     id="layer1"
+     inkscape:label="phoenix"
+     style="display:none"
+     sodipodi:insensitive="true">
+    <image
+       sodipodi:absref="/home/hans/development/crypto/mercator/apps/web/web/static/assets/images/phoenix.png"
+       xlink:href="phoenix.png"
+       y="0"
+       x="0"
+       id="image4211"
+       preserveAspectRatio="none"
+       height="99"
+       width="728" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer2"
+     inkscape:label="logo"
+     sodipodi:insensitive="true">
+    <g
+       id="g4366"
+       transform="matrix(1.6492708,0,0,1.6492708,2,1.674371)">
+      <g
+         style="display:none"
+         inkscape:label="bg"
+         id="layer4">
+        <circle
+           r="21.321251"
+           cy="28.998316"
+           cx="28.892096"
+           id="path4294"
+           style="opacity:1;fill:#19bd9d;fill-opacity:1;stroke:#19bd9d;stroke-width:11.12100029;stroke-miterlimit:2;stroke-dasharray:none;stroke-opacity:1" />
+      </g>
+      <g
+         id="g4296"
+         inkscape:label="hide_leaf"
+         style="display:inline">
+        <circle
+           style="opacity:1;fill:#2c3f51;fill-opacity:1;stroke:#2c3f51;stroke-width:11.12100029;stroke-miterlimit:2;stroke-dasharray:none;stroke-opacity:1"
+           id="circle4298"
+           cx="28.892096"
+           cy="28.998316"
+           r="21.321251" />
+      </g>
+      <g
+         style="display:inline"
+         transform="translate(2.8711224,2.707056)"
+         inkscape:label="Layer 2"
+         id="layer2-6">
+        <path
+           inkscape:connector-curvature="0"
+           id="path5356"
+           transform="translate(-2.8711224,-2.7070579)"
+           d="M 28.998047,0 A 28.998316,28.998316 0 0 0 0,28.998047 28.998316,28.998316 0 0 0 28.998047,57.996094 28.998316,28.998316 0 0 0 57.996094,28.998047 28.998316,28.998316 0 0 0 28.998047,0 Z M 13.046875,10.455078 c 25.721009,0.921818 35.639591,15.876877 30.660156,29.222656 -1.410727,3.713307 -2.910816,5.745615 -6.064453,7.863282 0.129468,-0.534303 0.26237,-1.072401 0.363281,-1.621094 C 39.870969,35.507041 36.335871,22.980708 19.050781,16.060547 32.803175,23.989308 38.352646,38.095065 31.939453,47.201172 21.023756,48.86442 13.046875,39.833444 13.046875,29.429688 l 0,-18.97461 z"
+           style="opacity:0.99299999;fill:#2c3e50;fill-opacity:1;stroke:none;stroke-width:10;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+      </g>
+      <g
+         style="display:inline"
+         inkscape:label="leaf"
+         id="layer3" />
+      <g
+         inkscape:label="compass"
+         id="layer1-7">
+        <path
+           id="path4204"
+           d="m 24.43054,35.849987 9.135556,-4.567777 -9.135556,-4.567787 0,9.135564 z m 13.703343,-21.090304 0,19.341701 -18.271131,9.135565 0,-19.341702 z M 48.41139,28.998316 q 0,-5.281496 -2.605063,-9.742217 -2.605062,-4.460731 -7.065793,-7.065794 -4.460721,-2.6050615 -9.742217,-2.6050615 -5.281495,0 -9.742216,2.6050615 -4.460732,2.605063 -7.065793,7.065794 -2.6050623,4.460721 -2.6050623,9.742217 0,5.281495 2.6050623,9.742216 2.605061,4.460732 7.065793,7.065793 4.460721,2.605063 9.742216,2.605063 5.281496,0 9.742217,-2.605063 4.460731,-2.605061 7.065793,-7.065793 2.605063,-4.460721 2.605063,-9.742216 z m 7.993613,0 q 0,7.458332 -3.675633,13.756871 -3.675644,6.298539 -9.974181,9.974181 -6.298539,3.675633 -13.756872,3.675633 -7.458332,0 -13.756871,-3.675633 Q 8.9429091,49.053726 5.2672639,42.755187 1.591631,36.456648 1.591631,28.998316 q 0,-7.458333 3.6756329,-13.756872 3.6756452,-6.2985371 9.9741821,-9.9741818 6.298539,-3.6756329 13.756871,-3.6756329 7.458333,0 13.756872,3.6756329 6.298537,3.6756447 9.974181,9.9741818 3.675633,6.298539 3.675633,13.756872 z"
+           style="fill:#ffffff"
+           inkscape:connector-curvature="0" />
+      </g>
+    </g>
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer5"
+     inkscape:label="txt">
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot4378"
+       style="font-style:normal;font-weight:normal;font-size:65px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       transform="translate(8.624531,-4.0056502)"><flowRegion
+         id="flowRegion4380"><rect
+           id="rect4382"
+           width="642.82758"
+           height="95.931038"
+           x="104.89655"
+           y="11.137931"
+           style="font-size:65px" /></flowRegion><flowPara
+         id="flowPara4384"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:65px;font-family:'Lane - Narrow';-inkscape-font-specification:'Lane - Narrow'">Mercator -- PeerAssets</flowPara></flowRoot>  </g>
+</svg>
