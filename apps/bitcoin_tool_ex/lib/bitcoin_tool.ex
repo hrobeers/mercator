@@ -14,7 +14,7 @@ defmodule BitcoinTool do
 
   def process!(data, name) do
     case name |> :stdinout.send(data |> String.to_char_list) do
-      {:stdout, [response]} -> response |> BitcoinTool.Result.parse
+      {:stdout, response} -> response |> Enum.join |> BitcoinTool.Result.parse
       {:stderr, [error]} ->  raise BitcoinToolError, message: error
     end
   end
