@@ -1,5 +1,6 @@
 defmodule Mercator.PeerAssets.Repo do
   use GenServer
+  require Logger
 
   alias Mercator.PeerAssets.Types.DeckSpawn
 
@@ -39,17 +40,22 @@ defmodule Mercator.PeerAssets.Repo do
   ## Server Callbacks
 
   def init(:ok) do
+    init(:retry, true)
+  end
+
+  defp init(:retry, log) do
     try do
       load_tag!(@prod_tag)
       load_tag!(@test_tag)
+      Logger.info("PeerAssets.Repo: initialized")
       reload_assets(1)
       {:ok, %{block_cnt: 0}}
     rescue
       _ ->
-        # TODO log
+        if log, do: Logger.warn("PeerAssets.Repo: Failed to establish rpc connection. Will retry every second.")
         # Block synchronously until connection is established
         :timer.sleep(1000)
-        init(:ok)
+        init(:retry, false)
     end
   end
 
