@@ -49,7 +49,7 @@ defmodule Mercator.PeerAssets.Repo do
       load_tag!(@test_tag)
       Logger.info("PeerAssets.Repo: initialized")
       reload_assets(1)
-      {:ok, %{block_cnt: 0}}
+      {:ok, %{block_cnt: 0, connected: true}}
     rescue
       _ ->
         if log, do: Logger.warn("PeerAssets.Repo: Failed to establish rpc connection. Will retry every second.")
@@ -70,17 +70,21 @@ defmodule Mercator.PeerAssets.Repo do
     new_state =
       case :rpc |> Gold.getblockcount do
         {:ok, block_cnt} ->
+          unless Map.get(state, :connected), do: Logger.info("PeerAssets.Repo: rpc connection re-established")
+          state = state |> Map.put(:connected, true)
           cond do
             Map.get(state, :block_cnt) == block_cnt ->
               state # no changes
             true ->
-              %{block_cnt: block_cnt,
-                PAprod: load_assets!(@prod_tag),
-                PAtest: load_assets!(@test_tag)}
+              state
+              |> Map.put(:block_cnt, block_cnt)
+              |> Map.put(:PAprod, load_assets!(@prod_tag))
+              |> Map.put(:PAtest, load_assets!(@test_tag))
           end
         {:error, _} ->
           # TODO: log error
-          state # no connection, just ignore until restored
+          if Map.get(state, :connected), do: Logger.warn("PeerAssets.Repo: rpc connection lost")
+          state |> Map.put(:connected, false)# no connection, just ignore until restored
       end
 
     reload_assets(@reload_interval)
