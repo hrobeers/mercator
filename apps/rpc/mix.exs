@@ -18,7 +18,7 @@ defmodule Mercator.RPC.Mixfile do
   #
   # Type "mix help compile.app" for more information
   def application do
-    [applications: [:logger, :httpoison],
+    [applications: [:logger, :httpoison, :bitcoin_tool_ex],
      mod: {Mercator.RPC, []}]
   end
 
