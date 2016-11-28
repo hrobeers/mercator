@@ -38,6 +38,7 @@ defmodule Mercator.PeerAssets.Mixfile do
   @priv_dir "../../_build/#{Mix.env}/lib/peerassets/priv/"
   defp deps do
     [{:rpc, in_umbrella: true},
-     {:exprotobuf, "~> 1.2.1"}]
+     {:exprotobuf, "~> 1.2.1"},
+     {:exrm, "~> 1.0"}]
   end
 end

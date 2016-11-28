@@ -41,6 +41,7 @@ defmodule BitcoinTool.Mixfile do
       app: false,
       compile: "make && mkdir -p " <> @priv_dir <> " && cp bitcoin-tool " <> @priv_dir
      },
-     {:stdinout_pool, git: "https://github.com/mattsta/erlang-stdinout-pool.git", tag: "v2.0.0"}]
+     {:stdinout_pool, git: "https://github.com/mattsta/erlang-stdinout-pool.git", tag: "v2.0.0"},
+     {:exrm, "~> 1.0"}]
   end
 end
