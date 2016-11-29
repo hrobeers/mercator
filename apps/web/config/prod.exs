@@ -62,4 +62,18 @@ config :logger, level: :info
 
 # Finally import the config/prod.secret.exs
 # which should be versioned separately.
+
+config :peerassets,
+  reload_interval: 60*60*1000,
+  PAprod: %{label: "PAprod",
+            address: "miHhMLaMWubq4Wx6SdTEqZcUHEGp8RKMZt",
+            wif: "cTJVuFKuupqVjaQCFLtsJfG8NyEyHZ3vjCdistzitsD2ZapvwYZH"},
+  PAtest: %{label: "PAtest",
+            address: "mvfR2sSxAfmDaGgPcmdsTwPqzS6R9nM5Bo",
+            wif: "cQToBYwzrB3yHr8h7PchBobM3zbrdGKj2LtXqg7NQLuxsHeKJtRL"}
+
+# Run the server on startup
+config :web, Mercator.Web.Endpoint,
+  server: true
+
 import_config "prod.secret.exs"
