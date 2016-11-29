@@ -4,9 +4,9 @@ defmodule Mercator.PeerAssets.Repo do
 
   alias Mercator.PeerAssets.Types.DeckSpawn
 
-  @reload_interval Application.get_env(:peerassets, :reload_interval)
-  @prod_tag Application.get_env(:peerassets, :PAprod)
-  @test_tag Application.get_env(:peerassets, :PAtest)
+  defp reload_interval, do: Application.get_env(:peerassets, :reload_interval)
+  defp prod_tag, do: Application.get_env(:peerassets, :PAprod)
+  defp test_tag, do: Application.get_env(:peerassets, :PAtest)
 
   @tag_fee Gold.btc_to_decimal(0.01)
   @listtxn_size if Mix.env == :test, do: 2, else: 10
@@ -45,9 +45,9 @@ defmodule Mercator.PeerAssets.Repo do
 
   defp init(:retry, log) do
     try do
-      load_tag!(@prod_tag)
-      load_tag!(@test_tag)
-      Logger.info("PeerAssets.Repo: initialized")
+      load_tag!(prod_tag)
+      load_tag!(test_tag)
+      Logger.info("PeerAssets.Repo: initialized (reload_interval: " <> Integer.to_string(reload_interval) <> ")")
       reload_assets(1)
       {:ok, %{block_cnt: 0, connected: true}}
     rescue
@@ -78,8 +78,8 @@ defmodule Mercator.PeerAssets.Repo do
             true ->
               state
               |> Map.put(:block_cnt, block_cnt)
-              |> Map.put(:PAprod, load_assets!(@prod_tag))
-              |> Map.put(:PAtest, load_assets!(@test_tag))
+              |> Map.put(:PAprod, load_assets!(prod_tag))
+              |> Map.put(:PAtest, load_assets!(test_tag))
           end
         {:error, _} ->
           # TODO: log error
@@ -87,7 +87,7 @@ defmodule Mercator.PeerAssets.Repo do
           state |> Map.put(:connected, false)# no connection, just ignore until restored
       end
 
-    reload_assets(@reload_interval)
+    reload_assets(reload_interval)
     {:noreply, new_state}
   end
 

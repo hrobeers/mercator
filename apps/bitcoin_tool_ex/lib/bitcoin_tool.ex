@@ -1,6 +1,6 @@
 defmodule BitcoinTool do
 
-  @bitcoin_tool_bin Application.app_dir(:bitcoin_tool_ex, ["priv", "bitcoin-tool"])
+  defp bitcoin_tool_bin, do: Application.app_dir(:bitcoin_tool_ex, ["priv", "bitcoin-tool"])
 
   def create_worker!(name, config) do
     Supervisor.Spec.worker(:stdinout_pool_server,
@@ -20,7 +20,7 @@ defmodule BitcoinTool do
   end
 
   defp build_cmd(config) do
-    @bitcoin_tool_bin <>
+    bitcoin_tool_bin <>
       " --input-file -" <>
       " --input-type " <> config.input_type <>
       " --input-format " <> config.input_format <>

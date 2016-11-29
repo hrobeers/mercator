@@ -1,8 +1,8 @@
 defmodule Mercator.RPC do
   use Application
 
-  @chain_type Application.get_env(:rpc, :chain_type)
-  @network Application.get_env(:rpc, :network)
+  defp chain_type, do: Application.get_env(:rpc, :chain_type)
+  defp network, do: Application.get_env(:rpc, :network)
 
   # See http://elixir-lang.org/docs/stable/elixir/Application.html
   # for more information on OTP Applications
@@ -24,7 +24,7 @@ defmodule Mercator.RPC do
                                  %BitcoinTool.Config{
                                    input_type: "public-key",
                                    input_format: "hex",
-                                   network: @network
+                                   network: network
                                  })
     ]
 
@@ -38,6 +38,6 @@ defmodule Mercator.RPC do
     :rpc
     |> Gold.getrawtransaction!(txnid)
     |> Base.decode16!(case: :lower)
-    |> Bitcoin.Protocol.Types.Tx.parse(txnid, @chain_type == :pos)
+    |> Bitcoin.Protocol.Types.Tx.parse(txnid, chain_type == :pos)
   end
 end
