@@ -64,7 +64,7 @@ config :logger, level: :info
 # which should be versioned separately.
 
 config :peerassets,
-  reload_interval: 60*60*1000,
+  reload_interval: 1000,
   PAprod: %{label: "PAprod",
             address: "miHhMLaMWubq4Wx6SdTEqZcUHEGp8RKMZt",
             wif: "cTJVuFKuupqVjaQCFLtsJfG8NyEyHZ3vjCdistzitsD2ZapvwYZH"},
