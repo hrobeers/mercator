@@ -15,10 +15,10 @@ defmodule Mercator.RPC do
       # worker(Mercator.RPC.Worker, [arg1, arg2, arg3]),
       worker(Application.get_env(:rpc, :rpc_lib),
              [%Gold.Config{
-                 hostname: Application.get_env(:rpc, :hostname),
-                 port: Application.get_env(:rpc, :port),
-                 user: Application.get_env(:rpc, :user),
-                 password: Application.get_env(:rpc, :password)},
+                 hostname: read_config!(:hostname),
+                 port: read_config!(:port),
+                 user: read_config!(:user),
+                 password: read_config!(:password)},
               :rpc]),
       BitcoinTool.create_worker!(:pubkey_hex,
                                  %BitcoinTool.Config{
@@ -39,5 +39,12 @@ defmodule Mercator.RPC do
     |> Gold.getrawtransaction!(txnid)
     |> Base.decode16!(case: :lower)
     |> Bitcoin.Protocol.Types.Tx.parse(txnid, chain_type == :pos)
+  end
+
+  defp read_config!(param) do
+    case Application.get_env(:rpc, param) do
+      {:system, var} -> System.get_env(var)
+      var -> var
+    end
   end
 end

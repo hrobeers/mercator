@@ -72,6 +72,15 @@ config :peerassets,
             address: "mvfR2sSxAfmDaGgPcmdsTwPqzS6R9nM5Bo",
             wif: "cQToBYwzrB3yHr8h7PchBobM3zbrdGKj2LtXqg7NQLuxsHeKJtRL"}
 
+config :rpc,
+  rpc_lib: Gold,
+  chain_type: :pos,
+  network: "peercoin-testnet",
+  hostname: {:system, "RPC_HOST"},
+  port: {:system, "RPC_PORT"},
+  user: {:system, "RPC_USER"},
+  password: {:system, "RPC_PASSWD"}
+
 # Run the server on startup
 config :web, Mercator.Web.Endpoint,
   server: true
