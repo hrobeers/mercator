@@ -31,6 +31,9 @@ config :rpc,
   user: "testnet",
   password: "testnet"
 
+# ppcoin: 1PPC = 1e6 * satoshi
+config :gold, :satoshi_exponent, 6
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env}.exs"

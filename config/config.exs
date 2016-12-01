@@ -15,6 +15,3 @@ import_config "../apps/*/config/config.exs"
 #       level: :info,
 #       format: "$date $time [$level] $metadata$message\n",
 #       metadata: [:user_id]
-
-# ppcoin: 1PPC = 1e6 * satoshi
-config :gold, :satoshi_exponent, 6
