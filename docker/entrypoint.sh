@@ -50,5 +50,8 @@ echo RPC USER        = "${RPC_USER}"
 echo RPC PASSWD      = "***"
 echo ""
 
+# Give permission to create subfolders
+chmod 733 $HOME/$REL_NAME
+
 # Run as unprivileged user
 su-exec $USER $HOME/$REL_NAME/bin/$REL_NAME foreground & wait
