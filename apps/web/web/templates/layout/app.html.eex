@@ -15,7 +15,7 @@
   <body>
     <div class="container">
       <header class="header">
-            <span class="float-xs-right tag tag-danger">peercoin-testnet</span>
+        <span class="float-xs-right tag tag-danger">peercoin-testnet</span>
         <span class="logo"></span>
       </header>
 
