@@ -116,8 +116,8 @@ defmodule Mercator.PeerAssets.Repo do
 
   defp load_more_assets!([[] | assets], _full_cnt, tag) do
     parsed = assets
-    |> Enum.reverse
     |> List.flatten
+    |> Enum.reverse
     |> Enum.filter_map(&(sufficient_tag_fee(&1)),
       fn(%Gold.Transaction{txid: txid}) ->
         txid
