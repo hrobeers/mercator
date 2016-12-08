@@ -75,12 +75,12 @@ defmodule Mercator.PeerAssets.Repo do
     new_state =
       case :rpc |> Gold.getblockcount do
         {:ok, block_cnt} ->
+          # Log reconnection if wasn't connected
           unless Map.get(state, :connected), do: Logger.info("PeerAssets.Repo: rpc connection re-established")
           state = state |> Map.put(:connected, true)
-          cond do
-            retrieve(:block_cnt) == block_cnt ->
-              state # no changes
-            true ->
+
+          # Reload assets if new block arrived
+          unless retrieve(:block_cnt) == block_cnt do
               # Parse
               prod_assets = load_assets!(prod_tag)
               test_assets = load_assets!(test_tag)
@@ -89,6 +89,9 @@ defmodule Mercator.PeerAssets.Repo do
               prod_assets |> store(:PAprod)
               test_assets |> store(:PAtest)
           end
+
+          # Return state
+          state
         {:error, _} ->
           # TODO: log error
           if Map.get(state, :connected), do: Logger.warn("PeerAssets.Repo: rpc connection lost")
