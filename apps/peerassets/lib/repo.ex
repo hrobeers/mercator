@@ -24,7 +24,7 @@ defmodule Mercator.PeerAssets.Repo do
   Returns a list of registered assets.
   """
   def list_assets(net \\ :PAprod) do
-    GenServer.call(:pa_repo, {:list_assets, net})
+    Agent.get(__MODULE__, &Map.fetch(&1, net))
   end
 
   @doc """
@@ -40,6 +40,15 @@ defmodule Mercator.PeerAssets.Repo do
   ## Server Callbacks
 
   def init(:ok) do
+    # init the asset storage agent
+    Agent.start_link(fn ->
+      %{
+        block_cnt: 0,
+        PAprod: [],
+        PAtest: []
+       }
+    end, name: __MODULE__)
+    # init the Repo
     init(:retry, true)
   end
 
@@ -49,7 +58,7 @@ defmodule Mercator.PeerAssets.Repo do
       load_tag!(test_tag)
       Logger.info("PeerAssets.Repo: initialized (reload_interval: " <> Integer.to_string(reload_interval) <> ")")
       reload_assets(1)
-      {:ok, %{block_cnt: 0, connected: true}}
+      {:ok, %{connected: true}}
     rescue
       _ ->
         if log, do: Logger.warn("PeerAssets.Repo: Failed to establish rpc connection. Will retry every second.")
@@ -57,10 +66,6 @@ defmodule Mercator.PeerAssets.Repo do
         :timer.sleep(1000)
         init(:retry, false)
     end
-  end
-
-  def handle_call({:list_assets, net}, _from, state) do
-    {:reply, Map.fetch(state, net), state}
   end
 
   defp reload_assets(timeout) do
@@ -73,13 +78,16 @@ defmodule Mercator.PeerAssets.Repo do
           unless Map.get(state, :connected), do: Logger.info("PeerAssets.Repo: rpc connection re-established")
           state = state |> Map.put(:connected, true)
           cond do
-            Map.get(state, :block_cnt) == block_cnt ->
+            retrieve(:block_cnt) == block_cnt ->
               state # no changes
             true ->
-              state
-              |> Map.put(:block_cnt, block_cnt)
-              |> Map.put(:PAprod, load_assets!(prod_tag))
-              |> Map.put(:PAtest, load_assets!(test_tag))
+              # Parse
+              prod_assets = load_assets!(prod_tag)
+              test_assets = load_assets!(test_tag)
+              # Store
+              block_cnt |> store(:block_cnt)
+              prod_assets |> store(:PAprod)
+              test_assets |> store(:PAtest)
           end
         {:error, _} ->
           # TODO: log error
@@ -92,6 +100,14 @@ defmodule Mercator.PeerAssets.Repo do
   end
 
   ## Private
+
+  defp retrieve(key) do
+    Agent.get(__MODULE__, &Map.get(&1, key))
+  end
+
+  defp store(value, key) do
+    Agent.update(__MODULE__, &Map.put(&1, key, value))
+  end
 
   defp tag_loaded?(tag) do
     case :rpc
