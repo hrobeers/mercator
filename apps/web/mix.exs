@@ -21,7 +21,7 @@ defmodule Mercator.Web.Mixfile do
   # Type `mix help compile.app` for more information.
   def application do
     [mod: {Mercator.Web, []},
-     applications: [:peerassets, :phoenix, :phoenix_pubsub, :phoenix_html, :cowboy, :logger, :gettext]]
+     applications: [:peerassets, :explorer, :phoenix, :phoenix_pubsub, :phoenix_html, :cowboy, :logger, :gettext]]
   end
 
   # Specifies which paths to compile per environment.
@@ -33,6 +33,7 @@ defmodule Mercator.Web.Mixfile do
   # Type `mix help deps` for examples and options.
   defp deps do
     [{:peerassets, in_umbrella: true},
+     {:explorer, in_umbrella: true},
      {:phoenix, "~> 1.2.0"},
      {:phoenix_pubsub, "~> 1.0"},
      {:phoenix_html, "~> 2.6"},
