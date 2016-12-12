@@ -23,6 +23,10 @@ defmodule Bitcoin.Protocol.Types.Script do
       <<65, pk :: bytes-size(65), 172>> ->
         pk |> pubkey_to_address
 
+      # Empty output
+      <<>> ->
+        {:error, "Empty output"}
+
       # Unmatched
       _ ->
         {:error, "Unable to parse address from output"}
