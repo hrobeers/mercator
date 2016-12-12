@@ -2,6 +2,8 @@ defmodule Mercator.PeerAssets.Repo do
   use GenServer
   require Logger
 
+  @agent_name String.to_atom(Atom.to_string(__MODULE__) <> ".Agent")
+
   alias Mercator.PeerAssets.Types.DeckSpawn
 
   defp reload_interval, do: Application.get_env(:peerassets, :reload_interval)
@@ -17,14 +19,14 @@ defmodule Mercator.PeerAssets.Repo do
   Starts the PeerAssets repository.
   """
   def start_link do
-    GenServer.start_link(__MODULE__, :ok, name: :pa_repo)
+    GenServer.start_link(__MODULE__, :ok, name: __MODULE__)
   end
 
   @doc """
   Returns a list of registered assets.
   """
   def list_assets(net \\ :PAprod) do
-    Agent.get(__MODULE__, &Map.fetch(&1, net))
+    Agent.get(@agent_name, &Map.fetch(&1, net))
   end
 
   @doc """
@@ -47,7 +49,7 @@ defmodule Mercator.PeerAssets.Repo do
         PAprod: [],
         PAtest: []
        }
-    end, name: __MODULE__)
+    end, name: @agent_name)
     # init the Repo
     init(:retry, true)
   end
@@ -105,11 +107,11 @@ defmodule Mercator.PeerAssets.Repo do
   ## Private
 
   defp retrieve(key) do
-    Agent.get(__MODULE__, &Map.get(&1, key))
+    Agent.get(@agent_name, &Map.get(&1, key))
   end
 
   defp store(value, key) do
-    Agent.update(__MODULE__, &Map.put(&1, key, value))
+    Agent.update(@agent_name, &Map.put(&1, key, value))
   end
 
   defp tag_loaded?(tag) do
