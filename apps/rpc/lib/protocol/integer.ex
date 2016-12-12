@@ -8,7 +8,7 @@ defmodule Bitcoin.Protocol.Types.Integer do
     data
   end
 
-  def parse(<<0xFF, data :: unsigned-native-integer-size(64)>>) do
+  def parse(<<0xFF, data :: unsigned-little-integer-size(64)>>) do
     data
   end
 
@@ -24,7 +24,7 @@ defmodule Bitcoin.Protocol.Types.Integer do
     [data, remaining]
   end
 
-  def parse_stream(<<0xFF, data :: unsigned-native-integer-size(64), remaining :: binary>>) do
+  def parse_stream(<<0xFF, data :: unsigned-little-integer-size(64), remaining :: binary>>) do
     [data, remaining]
   end
 
