@@ -8,13 +8,15 @@ defmodule Mercator.Explorer.Repo do
 
   defp reload_interval, do: 60*60*1000 # TODO from config
 
+  @agent_name String.to_atom(Atom.to_string(__MODULE__) <> ".Agent")
+
   ## Client API
 
   @doc """
   Starts the Explorer repository.
   """
   def start_link do
-    GenServer.start_link(__MODULE__, :ok, name: :explorer_repo)
+    GenServer.start_link(__MODULE__, :ok, name: __MODULE__)
   end
 
   ## Server Callbacks
@@ -25,7 +27,7 @@ defmodule Mercator.Explorer.Repo do
       %{
         block_cnt: (:rpc |> Gold.getblockcount!()) - 10
        }
-    end, name: __MODULE__)
+    end, name: @agent_name)
     # init the Repo
     init(:retry, true)
   end
@@ -94,11 +96,11 @@ defmodule Mercator.Explorer.Repo do
   ## Private
 
   defp retrieve(key) do
-    Agent.get(__MODULE__, &Map.get(&1, key))
+    Agent.get(@agent_name, &Map.get(&1, key))
   end
 
   defp store(value, key) do
-    Agent.update(__MODULE__, &Map.put(&1, key, value))
+    Agent.update(@agent_name, &Map.put(&1, key, value))
   end
 
   defp parse_new_blocks!(parse_until) do
