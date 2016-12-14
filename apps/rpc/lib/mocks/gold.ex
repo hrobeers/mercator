@@ -33,7 +33,20 @@ defmodule Mocks.Gold do
     case method do
       :getbalance -> {:reply, {:ok, 10.0}, state}
 
+      :getblock ->
+        case params do
+          ["000000000222939c79dfba0ff255d3ed08b1712e9419c2c2f5c5664602f7e34a"] ->
+            {:reply, {:ok, Poison.decode!("{\"hash\":\"000000000222939c79dfba0ff255d3ed08b1712e9419c2c2f5c5664602f7e34a\",\"size\":266,\"height\":12321,\"version\":1,\"merkleroot\":\"eeb310fd9c81d786954ec74c491e56daeed39277f7e508a5761865e571730a87\",\"time\":\"2012-10-26 13:23:48 UTC\",\"nonce\":467519785,\"bits\":\"1d008f61\",\"difficulty\":1.78545157,\"mint\":4325.02000000,\"previousblockhash\":\"0000000081e380b28634b33e143c90636ab5d27c75c5e5c44c3d59d2bea39539\",\"nextblockhash\":\"000000005d7effa886d429c6df47b9aa6c6a3dfb48328e4bd81fa319b3390f57\",\"flags\":\"proof-of-work\",\"proofhash\":\"000000000222939c79dfba0ff255d3ed08b1712e9419c2c2f5c5664602f7e34a\",\"entropybit\":0,\"modifier\":\"089c3a978e0b99a8\",\"modifierchecksum\":\"82251bc0\",\"tx\":[\"eeb310fd9c81d786954ec74c491e56daeed39277f7e508a5761865e571730a87\"]}")}, state}
+          [h] -> {:reply, {:error, "getblock not mocked for hash: " <> h}, state}
+        end
+
       :getblockcount -> {:reply, {:ok, 12345}, state}
+
+      :getblockhash ->
+        case params do
+          [12321] -> {:reply, {:ok, "000000000222939c79dfba0ff255d3ed08b1712e9419c2c2f5c5664602f7e34a"}, state}
+          [h] -> {:reply, {:error, "getblockhash not mocked for height: " <> Integer.to_string(h)}, state}
+        end
 
       :getaddressesbyaccount ->
         case params do
