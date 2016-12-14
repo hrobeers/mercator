@@ -22,6 +22,9 @@ defmodule Mercator.Web.Endpoint do
   plug Plug.RequestId
   plug Plug.Logger
 
+  # Enable CORS
+  plug Corsica, origins: "*"
+
   plug Plug.Parsers,
     parsers: [:urlencoded, :multipart, :json],
     pass: ["*/*"],
