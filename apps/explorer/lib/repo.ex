@@ -6,9 +6,10 @@ defmodule Mercator.Explorer.Repo do
   alias BitcoinTool.Address
   alias Mercator.RPC
 
-  defp reload_interval, do: 60*60*1000 # TODO from config
+  defp reload_interval, do: 20*1000 # TODO from config
 
   @agent_name String.to_atom(Atom.to_string(__MODULE__) <> ".Agent")
+  @tasksup_name String.to_atom(Atom.to_string(__MODULE__) <> ".TaskSup")
 
   ## Client API
 
@@ -22,20 +23,25 @@ defmodule Mercator.Explorer.Repo do
   ## Server Callbacks
 
   def init(:ok) do
-    # init the asset storage agent
-    Agent.start_link(fn ->
-      %{
-        block_cnt: (:rpc |> Gold.getblockcount!()) - 10
-       }
-    end, name: @agent_name)
     # init the Repo
     init(:retry, true)
   end
 
   defp init(:retry, log) do
     try do
-      {:ok, _} = :rpc |> Gold.getblockcount
+      # Check the connection
+      block_cnt = :rpc |> Gold.getblockcount!
       Logger.info("Explorer.Repo: RPC connection initialized (reload_interval: " <> Integer.to_string(reload_interval) <> ")")
+      # Init the asset storage agent (TODO: persistent storage)
+      Agent.start_link(fn ->
+        %{
+          low_cnt: block_cnt - 100,
+          high_cnt: block_cnt - 100
+         }
+      end, name: @agent_name)
+      # Init the task supervisor
+      Task.Supervisor.start_link(name: @tasksup_name)
+      # Initial blockchain parse (TODO: persistent storage)
       parse_new_blocks(1)
       {:ok, %{connected: true}}
     rescue
@@ -59,26 +65,15 @@ defmodule Mercator.Explorer.Repo do
           state = state |> Map.put(:connected, true)
 
           # Parse new blocks when they arrived
-          unless retrieve(:block_cnt) == block_cnt do
+          high_cnt = retrieve(:high_cnt)
+          unless high_cnt == block_cnt do
             # Parse
-            parse_new_blocks!(block_cnt)
-            |> Enum.map(&(&1.txns))
-            |> List.flatten
-            |> Enum.map(&(&1 |> RPC.gettransaction!))
-            |> Enum.map(&(&1.outputs))
-            |> List.flatten
-            |> Enum.filter_map(
-              fn(o) -> o.value > 0 end,
-              fn(o) ->
-                parsed = o |> Script.parse_address
-                case parsed do
-                  {:ok, addr} -> %{address: Address.base58check(addr), value: o.value}
-                  other -> other
-                end
-              end)
-            |> IO.inspect
+            parse_blocks!(high_cnt, block_cnt)
+
             # Store
-            block_cnt |> store(:block_cnt)
+            block_cnt |> store(:high_cnt)
+          else
+            IO.puts "Explorer up to date"
           end
 
           # Return state
@@ -93,6 +88,12 @@ defmodule Mercator.Explorer.Repo do
     {:noreply, new_state}
   end
 
+  def handle_info(task_result, state) do
+    task_result
+    |> IO.inspect
+    {:noreply, state}
+  end
+
   ## Private
 
   defp retrieve(key) do
@@ -103,24 +104,49 @@ defmodule Mercator.Explorer.Repo do
     Agent.update(@agent_name, &Map.put(&1, key, value))
   end
 
-  defp parse_new_blocks!(parse_until) do
-    [] |> parse_new_blocks!(retrieve(:block_cnt), parse_until)
+  defp parse_blocks!(low, high) do
+    hash = :rpc |> Gold.getblockhash!(high)
+    block = :rpc |> Gold.getblock!(hash)
+    [block] |> parse_blocks!(low, high)
   end
 
-  defp parse_new_blocks!(blocks, parsed_cnt, parse_until) do
-    hash = :rpc |> Gold.getblockhash!(parsed_cnt)
-    block = :rpc |> Gold.getblock!(hash)
+  defp parse_blocks!(blocks, low, high) do
+    [prev_block | _] = blocks
+    block = :rpc |> Gold.getblock!(prev_block.previousblockhash)
 
-    div = parsed_cnt/100
+    cnt = blocks |> Enum.count
+    div = cnt/100
     if (Float.ceil(div) == div) do
-      IO.puts parsed_cnt
+      IO.puts cnt
     end
 
-    if (parsed_cnt < parse_until) do
-      [block | blocks] |> parse_new_blocks!(parsed_cnt+1, parse_until)
+    block |> process_block
+
+    unless (block.height == low) do
+      [block | blocks] |> parse_blocks!(low, high)
     else
       [block | blocks]
     end
+  end
+
+  defp process_block(block) do
+    task = @tasksup_name
+    |> Task.Supervisor.async(fn () ->
+      outputs = block.txns
+      |> Enum.map(&(&1 |> RPC.gettransaction!))
+      |> Enum.map(&(&1.outputs))
+      |> List.flatten
+      |> Enum.filter_map(
+        fn(o) -> o.value > 0 end,
+        fn(o) ->
+          parsed = o |> Script.parse_address
+          case parsed do
+            {:ok, addr} -> %{address: Address.base58check(addr), value: o.value}
+            other -> other
+          end
+        end)
+      %{height: block.height, outputs: outputs}
+    end)
   end
 
 end
