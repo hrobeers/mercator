@@ -25,7 +25,7 @@ defmodule Bitcoin.Protocol.Types.Script do
 
       # Empty output
       <<>> ->
-        {:error, "Empty output"}
+        {:error, :empty}
 
       # Unmatched
       _ ->
@@ -46,6 +46,10 @@ defmodule Bitcoin.Protocol.Types.Script do
       # P2PK input: sig_size <signature>
       <<sig_size, _sig :: bytes-size(sig_size)>> ->
         prev_out |> parse_address
+
+      # Empty input
+      <<>> ->
+        {:error, :empty}
 
       # Unmatched
       _ ->

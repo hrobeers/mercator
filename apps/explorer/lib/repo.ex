@@ -132,20 +132,22 @@ defmodule Mercator.Explorer.Repo do
   defp process_block(block) do
     task = @tasksup_name
     |> Task.Supervisor.async(fn () ->
-      outputs = block.txns
-      |> Enum.map(&(&1 |> RPC.gettransaction!))
-      |> Enum.map(&(&1.outputs))
-      |> List.flatten
-      |> Enum.filter_map(
-        fn(o) -> o.value > 0 end,
-        fn(o) ->
-          parsed = o |> Script.parse_address
-          case parsed do
-            {:ok, addr} -> %{address: Address.base58check(addr), value: o.value}
-            other -> other
-          end
-        end)
-      %{height: block.height, outputs: outputs}
+      txns = block.txns
+      |> Enum.map(fn(txn_id) ->
+        txn = txn_id |> RPC.gettransaction!
+        outputs = txn.outputs
+        |> Enum.map(
+          fn(o) ->
+            parsed = o |> Script.parse_address
+            case parsed do
+              {:ok, addr} -> %{address: Address.base58check(addr), value: o.value}
+              {:error, :empty} -> %{address: "", value: o.value}
+              other -> other
+            end
+          end)
+        %{id: txn_id, outputs: outputs}
+      end)
+      %{height: block.height, txns: txns}
     end)
   end
 
