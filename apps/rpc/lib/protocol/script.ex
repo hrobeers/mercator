@@ -23,6 +23,10 @@ defmodule Bitcoin.Protocol.Types.Script do
       <<65, pk :: bytes-size(65), 172>> ->
         pk |> pubkey_to_address
 
+      # OP_RETURN
+      <<106, _:: binary>> ->
+        {:error, :op_return}
+
       # Empty output
       <<>> ->
         {:error, :empty}
@@ -31,6 +35,13 @@ defmodule Bitcoin.Protocol.Types.Script do
       _ ->
         {:error, "Unable to parse address from output"}
     end
+  end
+
+  def parse_address(%TransactionInput{previous_output:
+                                      %Outpoint{hash: <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>>}
+                                     }) do
+    {:error, :coinbase}
   end
 
   def parse_address(%TransactionInput{signature_script: script, previous_output: prev_out}) do
