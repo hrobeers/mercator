@@ -36,7 +36,8 @@ defmodule Mercator.Explorer.Repo do
       Agent.start_link(fn ->
         %{
           low_cnt: block_cnt - 100,
-          high_cnt: block_cnt - 100
+          high_cnt: block_cnt - 100,
+          pkh_index: Map.new
          }
       end, name: @agent_name)
       # Init the task supervisor
@@ -88,21 +89,45 @@ defmodule Mercator.Explorer.Repo do
     {:noreply, new_state}
   end
 
-  def handle_info(task_result, state) do
-    task_result
-    |> IO.inspect
+  def handle_info({_ref, %{height: height} }, state) do
+    # TODO register parsed block height
+    div = height/100
+    if (Float.ceil(div) == div) do
+      IO.puts height
+    end
+    {:noreply, state}
+  end
+
+  def handle_info({:DOWN, _ref, :process, _pid, :normal}, state) do
+    # ignore
     {:noreply, state}
   end
 
   ## Private
 
   defp retrieve(key) do
-    Agent.get(@agent_name, &Map.get(&1, key))
+    @agent_name
+    |> Agent.get(&Map.get(&1, key))
   end
 
   defp store(value, key) do
-    Agent.update(@agent_name, &Map.put(&1, key, value))
+    @agent_name
+    |> Agent.update(&Map.put(&1, key, value))
   end
+
+  defp add_to_pkh({:ok, pkh}, txn_id) do
+    @agent_name
+    |> Agent.get_and_update(fn(map) ->
+      map |> Map.get_and_update(:pkh_index, fn(index) ->
+        index
+        |> Map.get_and_update(pkh, fn(set) -> {set, set |> add(txn_id)} end)
+      end)
+    end)
+  end
+  defp add_to_pkh({:error, _}, _txn_id), do: nil
+
+  defp add(nil, element), do: MapSet.new([element])
+  defp add(set, element), do: set |> MapSet.put(element)
 
   defp parse_blocks!(low, high) do
     hash = :rpc |> Gold.getblockhash!(high)
@@ -114,12 +139,6 @@ defmodule Mercator.Explorer.Repo do
     [prev_block | _] = blocks
     block = :rpc |> Gold.getblock!(prev_block.previousblockhash)
 
-    cnt = blocks |> Enum.count
-    div = cnt/100
-    if (Float.ceil(div) == div) do
-      IO.puts cnt
-    end
-
     block |> process_block
 
     unless (block.height == low) do
@@ -130,25 +149,46 @@ defmodule Mercator.Explorer.Repo do
   end
 
   defp process_block(block) do
-    task = @tasksup_name
+    @tasksup_name
     |> Task.Supervisor.async(fn () ->
       txns = block.txns
       |> Enum.map(fn(txn_id) ->
         txn = txn_id |> RPC.gettransaction!
+
         outputs = txn.outputs
-        |> Enum.map(
-          fn(o) ->
-            parsed = o |> Script.parse_address
-            case parsed do
-              {:ok, addr} -> %{address: Address.base58check(addr), value: o.value}
-              {:error, :empty} -> %{address: "", value: o.value}
-              other -> other
-            end
-          end)
-        %{id: txn_id, outputs: outputs}
+        |> Enum.map(&(parse_pkh(&1)))
+
+        inputs = txn.inputs
+        |> Enum.map(&(parse_pkh(&1)))
+
+        %{id: txn_id, outputs: outputs, inputs: inputs}
       end)
-      %{height: block.height, txns: txns}
+
+      # Update the pkh_index
+      txns
+      |> Enum.each(fn(txn) ->
+        txn.outputs
+        |> Enum.each(&(add_to_pkh(&1, txn.id)))
+        txn.inputs
+        |> Enum.each(&(add_to_pkh(&1, txn.id)))
+      end)
+
+      %{height: block.height}
     end)
+  end
+
+  defp parse_pkh(inoutput) do
+    parsed = inoutput |> Script.parse_address
+    case parsed do
+      {:ok, addr} -> {:ok, Address.raw(addr)}
+      {:error, :empty} -> {:error, :empty}
+      {:error, :op_return} -> {:error, :op_return}
+      {:error, :coinbase} -> {:error, :coinbase}
+      other ->
+        Logger.error "Explorer: Failed to parse PKH from script:"
+        IO.inspect inoutput
+        other
+    end
   end
 
 end
