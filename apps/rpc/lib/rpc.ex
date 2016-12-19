@@ -25,7 +25,8 @@ defmodule Mercator.RPC do
                                    input_type: "public-key",
                                    input_format: "hex",
                                    network: network
-                                 })
+                                 }),
+      worker(Mercator.RPC.Cache, [1000])
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
@@ -35,10 +36,13 @@ defmodule Mercator.RPC do
   end
 
   def gettransaction!(txnid) do
-    :rpc
-    |> Gold.getrawtransaction!(txnid)
-    |> Base.decode16!(case: :lower)
-    |> Bitcoin.Protocol.Types.Tx.parse(txnid, chain_type == :pos)
+    txnid
+    |> Mercator.RPC.Cache.call(fn(id) ->
+      :rpc
+      |> Gold.getrawtransaction!(txnid)
+      |> Base.decode16!(case: :lower)
+      |> Bitcoin.Protocol.Types.Tx.parse(txnid, chain_type == :pos)
+    end)
   end
 
   defp read_config!(param) do
