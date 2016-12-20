@@ -26,7 +26,7 @@ defmodule Mercator.RPC do
                                    input_format: "hex",
                                    network: network
                                  }),
-      worker(Mercator.RPC.Cache, [1000])
+      worker(Mercator.RPC.Cache, [10000])
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html

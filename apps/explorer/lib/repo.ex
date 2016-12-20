@@ -44,7 +44,7 @@ defmodule Mercator.Explorer.Repo do
       Task.Supervisor.start_link(name: @tasksup_name)
       # Initial blockchain parse (TODO: persistent storage)
       parse_new_blocks(1)
-      {:ok, %{connected: true}}
+      {:ok, %{connected: true, start_time: DateTime.to_unix(DateTime.utc_now)}}
     rescue
       _ ->
         if log, do: Logger.warn("Explorer.Repo: Failed to establish rpc connection. Will retry every second.")
@@ -91,9 +91,13 @@ defmodule Mercator.Explorer.Repo do
 
   def handle_info({_ref, %{height: height} }, state) do
     # TODO register parsed block height
+
     div = height/100
     if (Float.ceil(div) == div) do
+      IO.puts ""
       IO.puts height
+      elapsed =  DateTime.to_unix(DateTime.utc_now) - state.start_time
+      IO.inspect elapsed
     end
     {:noreply, state}
   end
