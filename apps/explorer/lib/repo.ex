@@ -8,7 +8,6 @@ defmodule Mercator.Explorer.Repo do
 
   defp reload_interval, do: 20*1000 # TODO from config
 
-  @agent_name String.to_atom(Atom.to_string(__MODULE__) <> ".Agent")
   @tasksup_name String.to_atom(Atom.to_string(__MODULE__) <> ".TaskSup")
 
   ## Client API
@@ -33,13 +32,9 @@ defmodule Mercator.Explorer.Repo do
       block_cnt = :rpc |> Gold.getblockcount!
       Logger.info("Explorer.Repo: RPC connection initialized (reload_interval: " <> Integer.to_string(reload_interval) <> ")")
       # Init the asset storage agent (TODO: persistent storage)
-      Agent.start_link(fn ->
-        %{
-          low_cnt: block_cnt - 100,
-          high_cnt: block_cnt - 100,
-          pkh_index: Map.new
-         }
-      end, name: @agent_name)
+      :ets.new(:pkh_index, [:set, :public, :named_table])
+      store(block_cnt - 3000, :low_cnt)
+      store(block_cnt - 3000, :high_cnt)
       # Init the task supervisor
       Task.Supervisor.start_link(name: @tasksup_name)
       # Initial blockchain parse (TODO: persistent storage)
@@ -110,23 +105,20 @@ defmodule Mercator.Explorer.Repo do
   ## Private
 
   defp retrieve(key) do
-    @agent_name
-    |> Agent.get(&Map.get(&1, key))
+    case :ets.lookup(:pkh_index, key) do
+      [{key, result}] -> result
+      [] -> []
+    end
   end
 
   defp store(value, key) do
-    @agent_name
-    |> Agent.update(&Map.put(&1, key, value))
+    :pkh_index
+    |> :ets.insert({key, value})
   end
 
   defp add_to_pkh({:ok, pkh}, txn_id) do
-    @agent_name
-    |> Agent.get_and_update(fn(map) ->
-      map |> Map.get_and_update(:pkh_index, fn(index) ->
-        index
-        |> Map.get_and_update(pkh, fn(set) -> {set, set |> add(txn_id)} end)
-      end)
-    end)
+    [txn_id | retrieve(pkh)]
+    |> store(pkh)
   end
   defp add_to_pkh({:error, _}, _txn_id), do: nil
 
