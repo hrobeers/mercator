@@ -39,7 +39,7 @@ defmodule Mercator.Explorer.Repo do
       Task.Supervisor.start_link(name: @tasksup_name)
       # Initial blockchain parse (TODO: persistent storage)
       parse_new_blocks(1)
-      {:ok, %{connected: true, start_time: DateTime.to_unix(DateTime.utc_now)}}
+      {:ok, %{connected: true, parsing: false, start_time: DateTime.to_unix(DateTime.utc_now)}}
     rescue
       _ ->
         if log, do: Logger.warn("Explorer.Repo: Failed to establish rpc connection. Will retry every second.")
@@ -62,14 +62,10 @@ defmodule Mercator.Explorer.Repo do
 
           # Parse new blocks when they arrived
           high_cnt = retrieve(:high_cnt)
-          unless high_cnt == block_cnt do
-            # Parse
-            parse_blocks!(high_cnt, block_cnt)
-
-            # Store
-            block_cnt |> store(:high_cnt)
-          else
-            IO.puts "Explorer up to date"
+          cond do
+            high_cnt == block_cnt -> IO.puts "Explorer up to date"
+            state.parsing == false -> parse_blocks!(high_cnt, block_cnt)
+            true -> nil
           end
 
           # Return state
@@ -86,9 +82,7 @@ defmodule Mercator.Explorer.Repo do
 
   def handle_info({_ref, %{height: height} }, state) do
     # TODO register parsed block height
-
-    div = height/100
-    if (Float.ceil(div) == div) do
+    if height |> is_multiple_of?(100) do
       IO.puts ""
       IO.puts height
       elapsed =  DateTime.to_unix(DateTime.utc_now) - state.start_time
@@ -102,11 +96,22 @@ defmodule Mercator.Explorer.Repo do
     {:noreply, state}
   end
 
+  def handle_cast({:parse_blocks, block, low, high}, state) do
+    block |> parse_blocks!(low, high)
+    {:noreply, state |> Map.put(:parsing, true)}
+  end
+
+  def handle_cast({:parsing_done, _low, high}, state) do
+    # TODO: logging
+    high |> store(:high_cnt)
+    {:noreply, state |> Map.put(:parsing, false)}
+  end
+
   ## Private
 
   defp retrieve(key) do
     case :ets.lookup(:pkh_index, key) do
-      [{key, result}] -> result
+      [{_key, result}] -> result
       [] -> []
     end
   end
@@ -122,25 +127,24 @@ defmodule Mercator.Explorer.Repo do
   end
   defp add_to_pkh({:error, _}, _txn_id), do: nil
 
-  defp add(nil, element), do: MapSet.new([element])
-  defp add(set, element), do: set |> MapSet.put(element)
-
   defp parse_blocks!(low, high) do
     hash = :rpc |> Gold.getblockhash!(high)
     block = :rpc |> Gold.getblock!(hash)
-    [block] |> parse_blocks!(low, high)
+    GenServer.cast(__MODULE__, {:parse_blocks, block, low, high})
   end
 
-  defp parse_blocks!(blocks, low, high) do
-    [prev_block | _] = blocks
-    block = :rpc |> Gold.getblock!(prev_block.previousblockhash)
-
+  defp parse_blocks!(block, low, high) do
     block |> process_block
 
-    unless (block.height == low) do
-      [block | blocks] |> parse_blocks!(low, high)
-    else
-      [block | blocks]
+    prev_block = :rpc |> Gold.getblock!(block.previousblockhash)
+
+    cond do
+      # Done when low is reached
+      prev_block.height == low -> GenServer.cast(__MODULE__, {:parsing_done, low, high})
+      # Put every 100th block on message queue as backpressure
+      prev_block.height |> is_multiple_of?(100) -> GenServer.cast(__MODULE__, {:parse_blocks, prev_block, low, high})
+      # Process next block directly
+      true -> prev_block |> parse_blocks!(low, high)
     end
   end
 
@@ -185,6 +189,11 @@ defmodule Mercator.Explorer.Repo do
         IO.inspect inoutput
         other
     end
+  end
+
+  defp is_multiple_of?(to_test, base) do
+    div = to_test/base
+    (Float.ceil(div) == div)
   end
 
 end
