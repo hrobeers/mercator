@@ -63,7 +63,7 @@ defmodule Mercator.Explorer.Repo do
           # Parse new blocks when they arrived
           high_cnt = retrieve(:high_cnt)
           cond do
-            high_cnt == block_cnt -> IO.puts "Explorer up to date"
+            high_cnt == block_cnt -> Logger.info("Explorer.Repo: up to date")
             state.parsing == false -> parse_blocks!(high_cnt, block_cnt)
             true -> nil
           end
@@ -82,12 +82,6 @@ defmodule Mercator.Explorer.Repo do
 
   def handle_info({_ref, %{height: height} }, state) do
     # TODO register parsed block height
-    if height |> is_multiple_of?(100) do
-      IO.puts ""
-      IO.puts height
-      elapsed =  DateTime.to_unix(DateTime.utc_now) - state.start_time
-      IO.inspect elapsed
-    end
     {:noreply, state}
   end
 
@@ -97,12 +91,21 @@ defmodule Mercator.Explorer.Repo do
   end
 
   def handle_cast({:parse_blocks, block, low, high}, state) do
+    if (high-low > 1000) do
+      range = Integer.to_string(low) <> " - " <> Integer.to_string(high)
+      progress = Float.to_string(Float.round((high-block.height)/(high-low)*100, 2)) <> "%"
+      Logger.info("Explorer.Repo: Parsing blocks in range: " <> range <> " progress: " <> progress)
+    end
     block |> parse_blocks!(low, high)
     {:noreply, state |> Map.put(:parsing, true)}
   end
 
-  def handle_cast({:parsing_done, _low, high}, state) do
-    # TODO: logging
+  def handle_cast({:parsing_done, low, high}, state) do
+    if (high-low > 1000) do
+      range = Integer.to_string(low) <> " - " <> Integer.to_string(high)
+      Logger.info("Explorer.Repo: Parsing blocks in range: " <> range <> " progress: 100%")
+    end
+
     high |> store(:high_cnt)
     {:noreply, state |> Map.put(:parsing, false)}
   end
