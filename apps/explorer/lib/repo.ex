@@ -6,7 +6,15 @@ defmodule Mercator.Explorer.Repo do
   alias BitcoinTool.Address
   alias Mercator.RPC
 
-  defp reload_interval, do: 20*1000 # TODO from config
+  defp reload_interval, do: Application.get_env(:explorer, :reload_interval)
+  defp start_height(block_cnt) do
+    cnfg = Application.get_env(:explorer, :start_height)
+    if (cnfg < 0) do
+      block_cnt + cnfg
+    else
+      cnfg
+    end
+  end
 
   @tasksup_name String.to_atom(Atom.to_string(__MODULE__) <> ".TaskSup")
 
@@ -36,8 +44,8 @@ defmodule Mercator.Explorer.Repo do
       :ets.new(:sh_index, [:set, :public, :named_table])
       :ets.new(:op_return, [:set, :public, :named_table])
       # Set initial parsing state
-      store(0, :low_cnt, :pkh_index)
-      store(0, :high_cnt, :pkh_index)
+      store(start_height(block_cnt), :low_cnt, :pkh_index)
+      store(start_height(block_cnt), :high_cnt, :pkh_index)
       # Init the task supervisor
       Task.Supervisor.start_link(name: @tasksup_name)
       # Initial blockchain parse (TODO: persistent storage)
