@@ -23,25 +23,31 @@ defmodule Bitcoin.Protocol.Types.Script do
       <<65, pk :: bytes-size(65), 172>> ->
         pk |> pubkey_to_address
 
+      # P2SH output: OP_HASH160 20 <scriptHash> OP_EQUAL
+      <<169, 20, sh :: bytes-size(20), 135>> ->
+        {:sh, sh}
+
       # OP_RETURN
-      <<106, _:: binary>> ->
-        {:error, :op_return}
+      <<106, _data :: binary>> ->
+        {:ok, data} = script |> parse_opreturn
+        {:op_return, data}
 
       # Empty output
       <<>> ->
-        {:error, :empty}
+        {:empty}
 
       # Unmatched
-      _ ->
-        {:error, "Unable to parse address from output"}
+      other ->
+        {:error, "Unable to parse address from output script", other}
     end
   end
 
   def parse_address(%TransactionInput{previous_output:
                                       %Outpoint{hash: <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>>}
+                                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>>},
+                                      signature_script: script
                                      }) do
-    {:error, :coinbase}
+    {:coinbase, script}
   end
 
   def parse_address(%TransactionInput{signature_script: script, previous_output: prev_out}) do
@@ -60,11 +66,11 @@ defmodule Bitcoin.Protocol.Types.Script do
 
       # Empty input
       <<>> ->
-        {:error, :empty}
+        {:empty}
 
       # Unmatched
-      _ ->
-        {:error, "Unable to parse address from script"}
+      other ->
+        {:error, "Unable to parse address from input script", other}
     end
   end
 
@@ -77,13 +83,6 @@ defmodule Bitcoin.Protocol.Types.Script do
     prev_txn.outputs
     |> Enum.at(index)
     |> parse_address
-  end
-
-  def parse_address!(in_output) do
-    case parse_address(in_output) do
-      {:ok, result} -> result
-      {:error, err} -> raise err
-    end
   end
 
   def parse_opreturn(script) do
