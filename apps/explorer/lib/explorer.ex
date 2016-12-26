@@ -9,7 +9,7 @@ defmodule Mercator.Explorer do
     # Define workers and child supervisors to be supervised
     children = [
       # Starts a worker by calling: Mercator.Explorer.Worker.start_link(arg1, arg2, arg3)
-      # worker(Mercator.Explorer.Worker, [arg1, arg2, arg3]),
+      worker(Mercator.Explorer.Repo, [])
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html

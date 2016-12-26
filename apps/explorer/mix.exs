@@ -10,7 +10,7 @@ defmodule Mercator.Explorer.Mixfile do
      lockfile: "../../mix.lock",
      elixir: "~> 1.3",
      build_embedded: Mix.env == :prod,
-     start_permanent: false, # Mix.env == :prod,
+     start_permanent: Mix.env == :prod,
      deps: deps]
   end
 
@@ -18,7 +18,7 @@ defmodule Mercator.Explorer.Mixfile do
   #
   # Type "mix help compile.app" for more information
   def application do
-    [applications: [:logger],
+    [applications: [:logger, :rpc],
      mod: {Mercator.Explorer, []}]
   end
 
@@ -36,6 +36,7 @@ defmodule Mercator.Explorer.Mixfile do
   #
   # Type "mix help deps" for more examples and options
   defp deps do
-    [{:exrm, "~> 1.0"}]
+    [{:rpc, in_umbrella: true},
+     {:exrm, "~> 1.0"}]
   end
 end
