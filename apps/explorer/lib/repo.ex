@@ -127,26 +127,26 @@ defmodule Mercator.Explorer.Repo do
     |> :ets.insert({key, value})
   end
 
-  defp add_to_db({:pkh, pkh}, txn_id) do
-    txn_id = txn_id |> Base.decode16!(case: :lower)
+  defp add_to_db({:pkh, pkh}, txn) do
+    txn_id = txn.id |> Base.decode16!(case: :lower)
     [txn_id | retrieve(pkh, :pkh_index)]
     |> store(pkh, :pkh_index)
   end
-  defp add_to_db({:sh, sh}, txn_id) do
-    txn_id = txn_id |> Base.decode16!(case: :lower)
+  defp add_to_db({:sh, sh}, txn) do
+    txn_id = txn.id |> Base.decode16!(case: :lower)
     [txn_id | retrieve(sh, :sh_index)]
     |> store(sh, :sh_index)
   end
-  defp add_to_db({:op_return, data}, txn_id) do
-    txn_id = txn_id |> Base.decode16!(case: :lower)
+  defp add_to_db({:op_return, data}, txn) do
+    txn_id = txn.id |> Base.decode16!(case: :lower)
     :op_return |> :ets.insert({txn_id, data})
   end
-  defp add_to_db({:coinbase, _script}, _txn_id), do: nil
-  defp add_to_db({:empty}, _txn_id), do: nil
-  defp add_to_db({:error, reason, inoutput}, txn_id) do
+  defp add_to_db({:coinbase, _script}, _txn), do: nil
+  defp add_to_db({:empty}, _txn), do: nil
+  defp add_to_db({:error, reason, inoutput}, txn) do
     Logger.error """
 Explorer: #{reason}:
-  txn_id: #{txn_id}
+  txn_id: #{txn.id}
   #{inspect(inoutput)}
 """
   end
@@ -192,9 +192,9 @@ Explorer: #{reason}:
       txns
       |> Enum.each(fn(txn) ->
         txn.outputs
-        |> Enum.each(&(add_to_db(&1, txn.id)))
+        |> Enum.each(&(add_to_db(&1, txn)))
         txn.inputs
-        |> Enum.each(&(add_to_db(&1, txn.id)))
+        |> Enum.each(&(add_to_db(&1, txn)))
       end)
 
       %{height: block.height}
