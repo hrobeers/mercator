@@ -60,17 +60,13 @@ defmodule Bitcoin.Protocol.Types.Script do
       <<sig_size, _sig :: bytes-size(sig_size), 65, pk :: bytes-size(65)>> ->
         pk |> pubkey_to_address
 
-      # P2PK input: sig_size <signature>
-      <<sig_size, _sig :: bytes-size(sig_size)>> ->
-        prev_out |> parse_address
-
       # Empty input
       <<>> ->
         {:empty}
 
-      # Unmatched
-      other ->
-        {:error, "Unable to parse address from input script", other}
+      # Unmatched (P2PK & P2SH inputs): parse from previous output
+      _other ->
+        prev_out |> parse_address
     end
   end
 
