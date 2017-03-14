@@ -17,8 +17,8 @@ defmodule Mocks.Gold do
   ##
   def init(:ok) do
     state = Map.new()
-    |> Map.put("PAprod", ["miYNy9BbMkQ8Y5VaRDor4mgH5b3FEzVySr"])
-    |> Map.put("PAtest", ["mwqncWSnzUzouPZcLQWcLTPuSVq3rSiAAa"])
+    |> Map.put("PAprod", ["miHhMLaMWubq4Wx6SdTEqZcUHEGp8RKMZt"])
+    |> Map.put("PAtest", ["mvfR2sSxAfmDaGgPcmdsTwPqzS6R9nM5Bo"])
     {:ok, state}
   end
   def handle_call(request, _from, state)
@@ -37,10 +37,12 @@ defmodule Mocks.Gold do
         case params do
           ["000000000222939c79dfba0ff255d3ed08b1712e9419c2c2f5c5664602f7e34a"] ->
             {:reply, {:ok, Poison.decode!("{\"hash\":\"000000000222939c79dfba0ff255d3ed08b1712e9419c2c2f5c5664602f7e34a\",\"size\":266,\"height\":12321,\"version\":1,\"merkleroot\":\"eeb310fd9c81d786954ec74c491e56daeed39277f7e508a5761865e571730a87\",\"time\":\"2012-10-26 13:23:48 UTC\",\"nonce\":467519785,\"bits\":\"1d008f61\",\"difficulty\":1.78545157,\"mint\":4325.02000000,\"previousblockhash\":\"0000000081e380b28634b33e143c90636ab5d27c75c5e5c44c3d59d2bea39539\",\"nextblockhash\":\"000000005d7effa886d429c6df47b9aa6c6a3dfb48328e4bd81fa319b3390f57\",\"flags\":\"proof-of-work\",\"proofhash\":\"000000000222939c79dfba0ff255d3ed08b1712e9419c2c2f5c5664602f7e34a\",\"entropybit\":0,\"modifier\":\"089c3a978e0b99a8\",\"modifierchecksum\":\"82251bc0\",\"tx\":[\"eeb310fd9c81d786954ec74c491e56daeed39277f7e508a5761865e571730a87\"]}")}, state}
+          ["0000000081e380b28634b33e143c90636ab5d27c75c5e5c44c3d59d2bea39539"] ->
+            {:reply, {:ok, Poison.decode!("{\"hash\" : \"0000000081e380b28634b33e143c90636ab5d27c75c5e5c44c3d59d2bea39539\",\"confirmations\" : 251506,\"size\" : 265,\"height\" : 12320,\"version\" : 1,\"merkleroot\" : \"c8d64e983ed65134ce5f0766e40412c32da5317fe7086cb5ba9b3fb518ee1454\",\"time\" : \"2012-10-26 13:22:42 UTC\",\"nonce\" : 4166534776,\"bits\" : \"1d008f7c\",\"difficulty\" : 1.78413917,\"mint\" : 4325.82000000,\"previousblockhash\" : \"e59c52233cf78fc4bf90fe7967252d89f723a89375d62b25ffac78b14c505921\",\"nextblockhash\" : \"000000000222939c79dfba0ff255d3ed08b1712e9419c2c2f5c5664602f7e34a\",\"flags\" : \"proof-of-work stake-modifier\",\"proofhash\" : \"0000000081e380b28634b33e143c90636ab5d27c75c5e5c44c3d59d2bea39539\",\"entropybit\" : 1,\"modifier\" : \"089c3a978e0b99a8\",\"modifierchecksum\" : \"528960b6\",\"tx\" : [\"c8d64e983ed65134ce5f0766e40412c32da5317fe7086cb5ba9b3fb518ee1454\"]}")}, state}
           [h] -> {:reply, {:error, "getblock not mocked for hash: " <> h}, state}
         end
 
-      :getblockcount -> {:reply, {:ok, 12345}, state}
+      :getblockcount -> {:reply, {:ok, 12321}, state}
 
       :getblockhash ->
         case params do
@@ -51,7 +53,7 @@ defmodule Mocks.Gold do
       :getaddressesbyaccount ->
         case params do
           [label] -> {:reply, {:ok, state |> Map.get(label, [])}, state}
-                _ -> {:error, {:error}, state}
+                _ -> {:error, {:error, "getaddressesbyaccount supports only one label"}, state}
         end
 
       :getrawtransaction ->
@@ -65,7 +67,8 @@ defmodule Mocks.Gold do
           ["8903462de0633b528ea6fd269c9bed19a415c64e9c0f9e1974c88c4667eecd42"] ->
             {:reply, {:ok, "01000000af5e1258010000000000000000000000000000000000000000000000000000000000000000ffffffff11000000000300000000000000d70000be0a0000000001e0da4f6c010000002321036a34c6e2c719b81717b0a5ed5260de446932b253bf84637cb8016286e03f50d2ac00000000"}, state}
 
-          _ -> {:error, {:error}, state}
+          [_others] ->
+            {:reply, {:ok, "01000000e48e8a50010000000000000000000000000000000000000000000000000000000000000000ffffffff0e04e48e8a50010d062f503253482fffffffff016091ca0101000000232103eeb79ac676bbb52e0fd611774aed4078cd273d61c7edb43bc2e2a31bc488ee32ac00000000"}, state}
         end
 
       :importprivkey ->

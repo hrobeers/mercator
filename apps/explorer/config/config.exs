@@ -12,4 +12,4 @@ config :explorer,
   reload_interval: 20*1000,
   start_height: -200 # First block to parse (negative means relative to last block at startup)
 
-#     import_config "#{Mix.env}.exs"
+import_config "#{Mix.env}.exs"
