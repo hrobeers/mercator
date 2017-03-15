@@ -210,9 +210,9 @@ Explorer: #{reason}:
   end
 
   defp parse_script(inoutput) do
-    parsed = inoutput |> Script.parse_address
+    parsed = inoutput |> Script.parse
     case parsed do
-      {:ok, addr} -> {:pkh, Address.raw(addr)}
+      {:address, addr} -> {:pkh, Address.raw(addr)}
       other -> other
     end
   end

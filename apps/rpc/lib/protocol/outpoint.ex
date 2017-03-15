@@ -1,6 +1,6 @@
 defmodule Bitcoin.Protocol.Types.Outpoint do
 
-  defstruct hash: <<0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0>>, # char[32] - The hash of the referenced transaction.
+  defstruct hash: <<>>, # char[32] - The hash of the referenced transaction (initialize invalid).
             index: 0 # The index of the specific output in the transaction. The first output is 0, etc.
 
   @type t :: %Bitcoin.Protocol.Types.Outpoint{

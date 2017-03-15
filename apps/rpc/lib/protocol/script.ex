@@ -9,11 +9,18 @@ defmodule Bitcoin.Protocol.Types.Script do
 
   # TODO: P2SH in/out
 
-  def parse_address(%TransactionOutput{pk_script: script}) do
+  def parse_address!(inoutput) do
+    case parse(inoutput) do
+      {:address, addr} -> addr
+      {type, _} -> {:error, "parse_address expected :address but received :" <> Atom.to_string(type)}
+    end
+  end
+
+  def parse(%TransactionOutput{pk_script: script}) do
     case script do
       # P2PKH output: OP_DUP OP_HASH160 20 <pubKeyHash> OP_EQUALVERIFY OP_CHECKSIG
       <<118, 169, 20, pkh :: bytes-size(20), 136, 172>> ->
-        {:ok, pkh |> BitcoinTool.RawAddress.from_pkh(%BitcoinTool.Config{network: @network})}
+        {:address, pkh |> BitcoinTool.RawAddress.from_pkh(%BitcoinTool.Config{network: @network})}
 
       # P2PK output (compressed): 33 <pubkey> OP_CHECKSIG
       <<33, pk :: bytes-size(33), 172>> ->
@@ -42,7 +49,7 @@ defmodule Bitcoin.Protocol.Types.Script do
     end
   end
 
-  def parse_address(%TransactionInput{previous_output:
+  def parse(%TransactionInput{previous_output:
                                       %Outpoint{hash: <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>>},
                                       signature_script: script
@@ -50,7 +57,7 @@ defmodule Bitcoin.Protocol.Types.Script do
     {:coinbase, script}
   end
 
-  def parse_address(%TransactionInput{signature_script: script, previous_output: prev_out}) do
+  def parse(%TransactionInput{signature_script: script, previous_output: prev_out}) do
     case script do
       # P2PKH input (compressed): sig_size <signature> 33 <pubkey>
       <<sig_size, _sig :: bytes-size(sig_size), 33, pk :: bytes-size(33)>> ->
@@ -66,11 +73,11 @@ defmodule Bitcoin.Protocol.Types.Script do
 
       # Unmatched (P2PK & P2SH inputs): parse from previous output
       _other ->
-        prev_out |> parse_address
+        prev_out |> parse
     end
   end
 
-  def parse_address(%Outpoint{hash: hash, index: index}) do
+  def parse(%Outpoint{hash: hash, index: index}) do
     prev_txn = hash
     |> :binary.bin_to_list |> Enum.reverse |> :binary.list_to_bin
     |> Base.encode16(case: :lower)
@@ -78,7 +85,7 @@ defmodule Bitcoin.Protocol.Types.Script do
 
     prev_txn.outputs
     |> Enum.at(index)
-    |> parse_address
+    |> parse
   end
 
   def parse_opreturn(script) do
@@ -111,7 +118,7 @@ defmodule Bitcoin.Protocol.Types.Script do
     address = pubkey
     |> Base.encode16(case: :lower)
     |> BitcoinTool.process!(:pubkey_hex)
-    {:ok, address }
+    {:address, address }
   end
 
 end
