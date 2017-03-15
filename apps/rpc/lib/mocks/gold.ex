@@ -53,7 +53,7 @@ defmodule Mocks.Gold do
       :getaddressesbyaccount ->
         case params do
           [label] -> {:reply, {:ok, state |> Map.get(label, [])}, state}
-                _ -> {:error, {:error, "getaddressesbyaccount supports only one label"}, state}
+                _ -> {:reply, {:error, "getaddressesbyaccount supports only one label"}, state}
         end
 
       :getrawtransaction ->
@@ -67,8 +67,11 @@ defmodule Mocks.Gold do
           ["8903462de0633b528ea6fd269c9bed19a415c64e9c0f9e1974c88c4667eecd42"] ->
             {:reply, {:ok, "01000000af5e1258010000000000000000000000000000000000000000000000000000000000000000ffffffff11000000000300000000000000d70000be0a0000000001e0da4f6c010000002321036a34c6e2c719b81717b0a5ed5260de446932b253bf84637cb8016286e03f50d2ac00000000"}, state}
 
-          [_others] ->
+          ["eeb310fd9c81d786954ec74c491e56daeed39277f7e508a5761865e571730a87"] ->
             {:reply, {:ok, "01000000e48e8a50010000000000000000000000000000000000000000000000000000000000000000ffffffff0e04e48e8a50010d062f503253482fffffffff016091ca0101000000232103eeb79ac676bbb52e0fd611774aed4078cd273d61c7edb43bc2e2a31bc488ee32ac00000000"}, state}
+
+          [hash] ->
+            {:reply, {:error, "getrawtransaction not mocked for txn: " <> hash}, state}
         end
 
       :importprivkey ->
