@@ -11,7 +11,7 @@ defmodule Mercator.PeerAssets.Mixfile do
      elixir: "~> 1.3",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
-     deps: deps]
+     deps: deps()]
   end
 
   # Configuration for the OTP application
@@ -35,7 +35,6 @@ defmodule Mercator.PeerAssets.Mixfile do
   #   {:myapp, in_umbrella: true}
   #
   # Type "mix help deps" for more examples and options
-  @priv_dir "../../_build/#{Mix.env}/lib/peerassets/priv/"
   defp deps do
     [{:rpc, in_umbrella: true},
      {:exprotobuf, "~> 1.2.1"},
