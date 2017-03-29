@@ -10,6 +10,7 @@ use Mix.Config
 
 config :explorer,
   reload_interval: 20*1000,
-  start_height: -200 # First block to parse (negative means relative to last block at startup)
+  start_height: -200, # First block to parse (negative means relative to last block at startup)
+  batch_rpc: true # Compile time constant, no effect when changed without recompiling
 
 import_config "#{Mix.env}.exs"

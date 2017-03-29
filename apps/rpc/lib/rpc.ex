@@ -39,9 +39,23 @@ defmodule Mercator.RPC do
     txnid
     |> Mercator.RPC.Cache.call(fn(id) ->
       :rpc
-      |> Gold.getrawtransaction!(txnid)
+      |> Gold.getrawtransaction!(id)
       |> Base.decode16!(case: :lower)
       |> Bitcoin.Protocol.Types.Tx.parse(txnid, chain_type == :pos)
+    end)
+  end
+
+  def gettransactions!(txnids) do
+    txnids
+    |> Mercator.RPC.Cache.call_batch(fn(ids) ->
+      :rpc
+      |> Gold.getrawtransactions!(ids)
+      |> Enum.map(fn {txnid, rawtxn} ->
+        txn = rawtxn
+        |> Base.decode16!(case: :lower)
+        |> Bitcoin.Protocol.Types.Tx.parse(txnid, chain_type == :pos)
+        {txnid, txn}
+      end)
     end)
   end
 

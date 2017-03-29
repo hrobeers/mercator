@@ -25,6 +25,8 @@ defmodule Mocks.Gold do
       when is_atom(request), do: handle_rpc_request(request, [], state)
   def handle_call({request, params}, _from, state)
       when is_atom(request) and is_list(params), do: handle_rpc_request(request, params, state)
+  def handle_call({:batch, request, params_list}, _from, state)
+      when is_atom(request) and is_list(params_list), do: handle_batch_rpc_request(request, params_list, state)
 
   ##
   # Internal functions
@@ -97,6 +99,25 @@ defmodule Mocks.Gold do
 
       _ -> {:error, to_string(method) <> " not mocked"}
     end
+  end
+
+  # handles the rpc results in random order
+  defp handle_batch_rpc_request(method, params_list, state, timeout \\ 5000) when is_atom(method) do
+
+    commands = params_list
+    |> Enum.with_index()
+    |> Enum.map(fn {%{id: id, params: params}, idx} ->
+      %{id: id, method: method, params: [params]}
+    end)
+    |> Enum.shuffle()
+
+    results = commands
+    |> Enum.map(fn(cmd) ->
+      {:reply, {:ok, body}, _state} = handle_rpc_request(cmd.method, cmd.params, state)
+      {cmd.id, body}
+    end)
+
+    {:reply, {:ok, results}, state}
   end
 
 end

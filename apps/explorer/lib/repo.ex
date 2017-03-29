@@ -17,6 +17,7 @@ defmodule Mercator.Explorer.Repo do
   end
 
   @tasksup_name String.to_atom(Atom.to_string(__MODULE__) <> ".TaskSup")
+  @batch_rpc Application.get_env(:explorer, :batch_rpc) # Read at compile time
 
   ## Client API
 
@@ -183,18 +184,33 @@ Explorer: #{reason}:
   defp process_block(block) do
     @tasksup_name
     |> Task.Supervisor.async(fn () ->
-      txns = block.txns
-      |> Enum.map(fn(txn_id) ->
-        txn = txn_id |> RPC.gettransaction!
+      txns = case @batch_rpc do
+               false ->
+                 block.txns
+                 |> Enum.map(fn(txn_id) ->
+                   txn = txn_id |> RPC.gettransaction!
 
-        outputs = txn.outputs
-        |> Enum.map(&(parse_script(&1)))
+                   outputs = txn.outputs
+                   |> Enum.map(&(parse_script(&1)))
 
-        inputs = txn.inputs
-        |> Enum.map(&(parse_script(&1)))
+                   inputs = txn.inputs
+                   |> Enum.map(&(parse_script(&1)))
 
-        %{id: txn_id, outputs: outputs, inputs: inputs}
-      end)
+                   %{id: txn_id, outputs: outputs, inputs: inputs}
+                 end)
+               true ->
+                 block.txns
+                 |> RPC.gettransactions!
+                 |> Enum.map(fn {txn_id, txn} ->
+                   outputs = txn.outputs
+                   |> Enum.map(&(parse_script(&1)))
+
+                   inputs = txn.inputs
+                   |> Enum.map(&(parse_script(&1)))
+
+                   %{id: txn_id, outputs: outputs, inputs: inputs}
+                 end)
+             end
 
       # Update the database
       txns

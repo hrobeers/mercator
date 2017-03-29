@@ -105,4 +105,12 @@ defmodule Mercator.RPCTest do
       signature_script: script_hex |> Base.decode16!(case: :lower)
     }
   end
+
+  test "gettransactions batch call" do
+    txns = Mercator.RPC.gettransactions!(["9d4263fdc91aa2bbcdc4f24e4d8296c0045f23362d3cfa5821118d5f1501fafc",
+                                         "356b9736ee7dbf387ea7b10a16beda8ea1ad5db0cbc53e749f5e4b3cf7545552",
+                                         "8903462de0633b528ea6fd269c9bed19a415c64e9c0f9e1974c88c4667eecd42",
+                                         "eeb310fd9c81d786954ec74c491e56daeed39277f7e508a5761865e571730a87"])
+    #IO.inspect(txns)
+  end
 end
