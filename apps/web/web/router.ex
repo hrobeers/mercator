@@ -25,6 +25,12 @@ defmodule Mercator.Web.Router do
     get "/info/:height", BlockController, :info
   end
 
+  scope "/api/v1/tx", Mercator.Web do
+    pipe_through :api
+
+    post "/push", TxController, :push
+  end
+
   # Other scopes may use custom stacks.
   # scope "/api", Mercator.Web do
   #   pipe_through :api
