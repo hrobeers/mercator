@@ -18,7 +18,7 @@ ENTRYPOINT ["/entrypoint.sh"]
 #
 
 ENV APP_NAME mercator
-ENV APP_VERSION "0.0.1"
+ENV APP_VERSION "0.0.2"
 
 ENV REL_NAME web
 
