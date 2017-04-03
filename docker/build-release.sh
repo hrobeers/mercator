@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# When building in docker image msaraiva/elixir-gcc
+# First run:
+# apk --update add openssl-dev
+
 rm -rf rel/
 cd ../
 mix deps.get
