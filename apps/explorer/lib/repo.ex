@@ -18,6 +18,7 @@ defmodule Mercator.Explorer.Repo do
 
   @tasksup_name String.to_atom(Atom.to_string(__MODULE__) <> ".TaskSup")
   @batch_rpc Application.get_env(:explorer, :batch_rpc) # Read at compile time
+  @conf_cnt 10
 
   ## Client API
 
@@ -44,6 +45,7 @@ defmodule Mercator.Explorer.Repo do
       :ets.new(:pkh_index, [:set, :public, :named_table])
       :ets.new(:sh_index, [:set, :public, :named_table])
       :ets.new(:op_return, [:set, :public, :named_table])
+      :ets.new(:unconfirmed, [:set, :protected, :named_table])
       # Set initial parsing state
       store(start_height(block_cnt), :low_cnt, :pkh_index)
       store(start_height(block_cnt), :high_cnt, :pkh_index)
@@ -75,8 +77,11 @@ defmodule Mercator.Explorer.Repo do
           # Parse new blocks when they arrived
           high_cnt = retrieve(:high_cnt, :pkh_index)
           cond do
-            high_cnt == block_cnt -> Logger.info("Explorer.Repo: up to date")
-            state.parsing == false -> parse_blocks!(high_cnt, block_cnt)
+            high_cnt == block_cnt ->
+              Logger.info("Explorer.Repo: up to date")
+            state.parsing == false ->
+              update_unconfirmed()
+              parse_blocks!(high_cnt, block_cnt)
             true -> nil
           end
 
@@ -136,19 +141,23 @@ defmodule Mercator.Explorer.Repo do
     |> :ets.insert({key, value})
   end
 
-  defp add_to_db({:pkh, pkh}, txn, _block) do
+  defp delete(key, table) do
+    :ets.delete(table, key)
+  end
+
+  defp add_to_db({:pkh, pkh}, txn, block) do
     txn_id = txn.id |> Base.decode16!(case: :lower)
-    [txn_id | retrieve(pkh, :pkh_index)]
+    [{txn_id, block.hash} | retrieve(pkh, :pkh_index)]
     |> store(pkh, :pkh_index)
   end
-  defp add_to_db({:sh, sh}, txn, _block) do
+  defp add_to_db({:sh, sh}, txn, block) do
     txn_id = txn.id |> Base.decode16!(case: :lower)
-    [txn_id | retrieve(sh, :sh_index)]
+    [{txn_id, block.hash} | retrieve(sh, :sh_index)]
     |> store(sh, :sh_index)
   end
   defp add_to_db({:op_return, data}, txn, block) do
     txn_id = txn.id |> Base.decode16!(case: :lower)
-    :op_return |> :ets.insert({txn_id, %{height: block.height, data: data}})
+    :op_return |> :ets.insert({txn_id, block.hash, %{height: block.height, data: data}})
   end
   defp add_to_db({:coinbase, _script}, _txn, _block), do: nil
   defp add_to_db({:empty}, _txn, _block), do: nil
@@ -182,13 +191,23 @@ Explorer: #{reason}:
   end
 
   defp process_block(block) do
+    # Convert block hash to binary
+    block = block
+    |> Map.put(:hash, block.hash |> Base.decode16!(case: :lower))
+
+    if block.confirmations < @conf_cnt do
+      block
+      |> store(block.hash, :unconfirmed)
+    end
+
     @tasksup_name
     |> Task.Supervisor.async(fn () ->
       txns = case @batch_rpc do
                false ->
                  block.txns
                  |> Enum.map(fn(txn_id) ->
-                   txn = txn_id |> RPC.gettransaction!
+                   txn = txn_id
+                   |> RPC.gettransaction!
 
                    outputs = txn.outputs
                    |> Enum.map(&(parse_script(&1)))
@@ -230,6 +249,26 @@ Explorer: #{reason}:
     case parsed do
       {:address, addr} -> {:pkh, Address.raw(addr)}
       other -> other
+    end
+  end
+
+  defp update_unconfirmed() do
+    Logger.info("Explorer.Repo: updating unconfirmed table")
+    update_unconfirmed(:ets.first(:unconfirmed),[])
+  end
+  defp update_unconfirmed(:"$end_of_table", to_delete) do
+    # TODO: investigate what happens to orphan blocks
+    to_delete
+    |> Enum.each(&(&1 |> delete(:unconfirmed)))
+    :ok
+  end
+  defp update_unconfirmed(hash, to_delete) do
+    block = :rpc |> Gold.getblock!(hash |> Base.encode16(case: :lower))
+    block |> store(hash, :unconfirmed)
+    if block.confirmations >= @conf_cnt do
+      update_unconfirmed(:ets.next(:unconfirmed, hash), [hash | to_delete])
+    else
+      update_unconfirmed(:ets.next(:unconfirmed, hash), to_delete)
     end
   end
 

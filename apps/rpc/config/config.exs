@@ -27,9 +27,9 @@ config :rpc,
   chain_type: :pos,
   network: "peercoin-testnet",
   hostname: "localhost",
-  port: 8444,
+  port: 8666,
   user: "testnet",
-  password: "testnet"
+  password: "testnetpw"
 
 # ppcoin: 1PPC = 1e6 * satoshi
 config :gold, :satoshi_exponent, 6
