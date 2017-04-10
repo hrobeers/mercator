@@ -4,6 +4,7 @@ defmodule Mercator.Atlas.Repo do
 
   alias Bitcoin.Protocol.Types.Script
   alias BitcoinTool.Address
+  alias Mercator.Atlas.DB
   alias Mercator.RPC
 
   defp reload_interval, do: Application.get_env(:atlas, :reload_interval)
@@ -42,14 +43,10 @@ defmodule Mercator.Atlas.Repo do
       block_cnt = :rpc |> Gold.getblockcount!
       Logger.info("Atlas.Repo: RPC connection initialized (reload_interval: " <> Integer.to_string(reload_interval) <> ")")
       # Init the ETS tables
-      :ets.new(:pkh_index, [:set, :public, :named_table])
-      :ets.new(:sh_index, [:set, :public, :named_table])
-      :ets.new(:op_return, [:set, :public, :named_table])
-      :ets.new(:unconfirmed, [:set, :protected, :named_table])
-      :ets.new(:blocks, [:set, :protected, :named_table])
+      :ok = DB.init()
       # Set initial parsing state
-      store(start_height(block_cnt), :low_cnt, :pkh_index)
-      store(start_height(block_cnt), :high_cnt, :pkh_index)
+      DB.store(start_height(block_cnt), :low_cnt, :pkh_index)
+      DB.store(start_height(block_cnt), :high_cnt, :pkh_index)
       # Init the task supervisor
       Task.Supervisor.start_link(name: @tasksup_name)
       # Initial blockchain parse (TODO: persistent storage)
@@ -76,7 +73,7 @@ defmodule Mercator.Atlas.Repo do
           state = state |> Map.put(:connected, true)
 
           # Parse new blocks when they arrived
-          high_cnt = retrieve(:high_cnt, :pkh_index)
+          high_cnt = DB.retrieve(:high_cnt, :pkh_index)
           cond do
             high_cnt == block_cnt ->
               Logger.info("Atlas.Repo: up to date")
@@ -124,60 +121,11 @@ defmodule Mercator.Atlas.Repo do
       Logger.info("Atlas.Repo: Parsing blocks in range: " <> range <> " progress: 100%")
     end
 
-    high |> store(:high_cnt, :pkh_index)
+    high |> DB.store(:high_cnt, :pkh_index)
     {:noreply, state |> Map.put(:parsing, false)}
   end
 
   ## Private
-
-  defp retrieve(key, table) do
-    case :ets.lookup(table, key) do
-      [{_key, result}] -> result
-      [] -> []
-    end
-  end
-
-  defp store(value, key, table) do
-    table
-    |> :ets.insert({key, value})
-  end
-
-  defp delete(key, table) do
-    :ets.delete(table, key)
-  end
-
-  defp add_to_db({:pkh, pkh}, txn, block) do
-    #txn_id = txn.txn_id |> Base.decode16!(case: :lower)
-    #[{txn_id, block.hash} | retrieve(pkh, :pkh_index)]
-    block_height = :gpb.encode_varint(block.height)
-    txn_idx = :gpb.encode_varint(txn.idx)
-    [block_height <> txn_idx | retrieve(pkh, :pkh_index)]
-    |> store(pkh, :pkh_index)
-  end
-  defp add_to_db({:sh, sh}, txn, block) do
-    #txn_id = txn.txn_id |> Base.decode16!(case: :lower)
-    #[{txn_id, block.hash} | retrieve(sh, :sh_index)]
-    block_height = :gpb.encode_varint(block.height)
-    txn_idx = :gpb.encode_varint(txn.idx)
-    [block_height <> txn_idx | retrieve(sh, :sh_index)]
-    |> store(sh, :sh_index)
-  end
-  defp add_to_db({:op_return, data}, txn, block) do
-    #txn_id = txn.txn_id |> Base.decode16!(case: :lower)
-    #:op_return |> :ets.insert({txn_id, block.hash, %{height: block.height, data: data}})
-    block_height = :gpb.encode_varint(block.height)
-    txn_idx = :gpb.encode_varint(txn.idx)
-    :op_return |> :ets.insert({block_height <> txn_idx, data})
-  end
-  defp add_to_db({:coinbase, _script}, _txn, _block), do: nil
-  defp add_to_db({:empty}, _txn, _block), do: nil
-  defp add_to_db({:error, reason, inoutput}, txn, _block) do
-    Logger.error """
-Atlas: #{reason}:
-  txn_id: #{txn.txn_id}
-  #{inspect(inoutput)}
-"""
-  end
 
   defp parse_blocks!(low, high) do
     hash = :rpc |> Gold.getblockhash!(high)
@@ -207,10 +155,10 @@ Atlas: #{reason}:
 
     block.txns
     |> Enum.map(&(&1 |> Base.decode16!(case: :lower)))
-    |> store(block.height, :blocks)
+    |> DB.store(block.height, :blocks)
     if block.confirmations < @conf_cnt do
       block
-      |> store(block.hash, :unconfirmed)
+      |> DB.store(block.hash, :unconfirmed)
     end
 
     @tasksup_name
@@ -252,9 +200,9 @@ Atlas: #{reason}:
       txns
       |> Enum.each(fn(txn) ->
         txn.outputs
-        |> Enum.each(&(add_to_db(&1, txn, block)))
+        |> Enum.each(&(DB.add_output(&1, txn, block)))
         txn.inputs
-        |> Enum.each(&(add_to_db(&1, txn, block)))
+        |> Enum.each(&(DB.add_input(&1, txn, block)))
       end)
 
       %{height: block.height}
@@ -276,12 +224,12 @@ Atlas: #{reason}:
   defp update_unconfirmed(:"$end_of_table", to_delete) do
     # TODO: investigate what happens to orphan blocks
     to_delete
-    |> Enum.each(&(&1 |> delete(:unconfirmed)))
+    |> Enum.each(&(&1 |> DB.delete(:unconfirmed)))
     :ok
   end
   defp update_unconfirmed(hash, to_delete) do
     block = :rpc |> Gold.getblock!(hash |> Base.encode16(case: :lower))
-    block |> store(hash, :unconfirmed)
+    block |> DB.store(hash, :unconfirmed)
     if block.confirmations >= @conf_cnt do
       update_unconfirmed(:ets.next(:unconfirmed, hash), [hash | to_delete])
     else
