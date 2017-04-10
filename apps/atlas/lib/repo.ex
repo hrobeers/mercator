@@ -1,4 +1,4 @@
-defmodule Mercator.Explorer.Repo do
+defmodule Mercator.Atlas.Repo do
   use GenServer
   require Logger
 
@@ -6,9 +6,9 @@ defmodule Mercator.Explorer.Repo do
   alias BitcoinTool.Address
   alias Mercator.RPC
 
-  defp reload_interval, do: Application.get_env(:explorer, :reload_interval)
+  defp reload_interval, do: Application.get_env(:atlas, :reload_interval)
   defp start_height(block_cnt) do
-    cnfg = Application.get_env(:explorer, :start_height)
+    cnfg = Application.get_env(:atlas, :start_height)
     if (cnfg < 0) do
       block_cnt + cnfg
     else
@@ -17,13 +17,13 @@ defmodule Mercator.Explorer.Repo do
   end
 
   @tasksup_name String.to_atom(Atom.to_string(__MODULE__) <> ".TaskSup")
-  @batch_rpc Application.get_env(:explorer, :batch_rpc) # Read at compile time
+  @batch_rpc Application.get_env(:atlas, :batch_rpc) # Read at compile time
   @conf_cnt 10
 
   ## Client API
 
   @doc """
-  Starts the Explorer repository.
+  Starts the Atlas repository.
   """
   def start_link do
     GenServer.start_link(__MODULE__, :ok, name: __MODULE__)
@@ -40,7 +40,7 @@ defmodule Mercator.Explorer.Repo do
     try do
       # Check the connection
       block_cnt = :rpc |> Gold.getblockcount!
-      Logger.info("Explorer.Repo: RPC connection initialized (reload_interval: " <> Integer.to_string(reload_interval) <> ")")
+      Logger.info("Atlas.Repo: RPC connection initialized (reload_interval: " <> Integer.to_string(reload_interval) <> ")")
       # Init the ETS tables
       :ets.new(:pkh_index, [:set, :public, :named_table])
       :ets.new(:sh_index, [:set, :public, :named_table])
@@ -57,7 +57,7 @@ defmodule Mercator.Explorer.Repo do
       {:ok, %{connected: true, parsing: false, start_time: DateTime.to_unix(DateTime.utc_now)}}
     rescue
       _ ->
-        if log, do: Logger.warn("Explorer.Repo: Failed to establish rpc connection. Will retry every second.")
+        if log, do: Logger.warn("Atlas.Repo: Failed to establish rpc connection. Will retry every second.")
         # Block synchronously until connection is established
         :timer.sleep(1000)
         init(:retry, false)
@@ -72,14 +72,14 @@ defmodule Mercator.Explorer.Repo do
       case :rpc |> Gold.getblockcount do
         {:ok, block_cnt} ->
           # Log reconnection if wasn't connected
-          unless Map.get(state, :connected), do: Logger.info("Explorer.Repo: rpc connection re-established")
+          unless Map.get(state, :connected), do: Logger.info("Atlas.Repo: rpc connection re-established")
           state = state |> Map.put(:connected, true)
 
           # Parse new blocks when they arrived
           high_cnt = retrieve(:high_cnt, :pkh_index)
           cond do
             high_cnt == block_cnt ->
-              Logger.info("Explorer.Repo: up to date")
+              Logger.info("Atlas.Repo: up to date")
             state.parsing == false ->
               update_unconfirmed()
               parse_blocks!(high_cnt, block_cnt)
@@ -112,7 +112,7 @@ defmodule Mercator.Explorer.Repo do
     if (high-low > 1000) do
       range = Integer.to_string(low) <> " - " <> Integer.to_string(high)
       progress = Float.to_string(Float.round((high-block.height)/(high-low)*100, 2)) <> "%"
-      Logger.info("Explorer.Repo: Parsing blocks in range: " <> range <> " progress: " <> progress)
+      Logger.info("Atlas.Repo: Parsing blocks in range: " <> range <> " progress: " <> progress)
     end
     block |> parse_blocks!(low, high)
     {:noreply, state |> Map.put(:parsing, true)}
@@ -121,7 +121,7 @@ defmodule Mercator.Explorer.Repo do
   def handle_cast({:parsing_done, low, high}, state) do
     if (high-low > 1000) do
       range = Integer.to_string(low) <> " - " <> Integer.to_string(high)
-      Logger.info("Explorer.Repo: Parsing blocks in range: " <> range <> " progress: 100%")
+      Logger.info("Atlas.Repo: Parsing blocks in range: " <> range <> " progress: 100%")
     end
 
     high |> store(:high_cnt, :pkh_index)
@@ -173,7 +173,7 @@ defmodule Mercator.Explorer.Repo do
   defp add_to_db({:empty}, _txn, _block), do: nil
   defp add_to_db({:error, reason, inoutput}, txn, _block) do
     Logger.error """
-Explorer: #{reason}:
+Atlas: #{reason}:
   txn_id: #{txn.txn_id}
   #{inspect(inoutput)}
 """
@@ -270,7 +270,7 @@ Explorer: #{reason}:
   end
 
   defp update_unconfirmed() do
-    Logger.info("Explorer.Repo: updating unconfirmed table")
+    Logger.info("Atlas.Repo: updating unconfirmed table")
     update_unconfirmed(:ets.first(:unconfirmed),[])
   end
   defp update_unconfirmed(:"$end_of_table", to_delete) do

@@ -1,8 +1,8 @@
-defmodule Mercator.Explorer.Mixfile do
+defmodule Mercator.Atlas.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :explorer,
+    [app: :atlas,
      version: "0.1.0",
      build_path: "../../_build",
      config_path: "../../config/config.exs",
@@ -19,7 +19,7 @@ defmodule Mercator.Explorer.Mixfile do
   # Type "mix help compile.app" for more information
   def application do
     [applications: [:logger, :rpc],
-     mod: {Mercator.Explorer, []}]
+     mod: {Mercator.Atlas, []}]
   end
 
   # Dependencies can be Hex packages:

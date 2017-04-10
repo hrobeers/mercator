@@ -8,7 +8,7 @@ use Mix.Config
 # if you want to provide default values for your application for
 # 3rd-party users, it should be done in your "mix.exs" file.
 
-config :explorer,
+config :atlas,
   reload_interval: 20*1000,
   start_height: -200, # First block to parse (negative means relative to last block at startup)
   batch_rpc: true # Compile time constant, no effect when changed without recompiling
