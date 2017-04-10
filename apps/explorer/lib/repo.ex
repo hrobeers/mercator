@@ -46,6 +46,7 @@ defmodule Mercator.Explorer.Repo do
       :ets.new(:sh_index, [:set, :public, :named_table])
       :ets.new(:op_return, [:set, :public, :named_table])
       :ets.new(:unconfirmed, [:set, :protected, :named_table])
+      :ets.new(:blocks, [:set, :protected, :named_table])
       # Set initial parsing state
       store(start_height(block_cnt), :low_cnt, :pkh_index)
       store(start_height(block_cnt), :high_cnt, :pkh_index)
@@ -146,25 +147,34 @@ defmodule Mercator.Explorer.Repo do
   end
 
   defp add_to_db({:pkh, pkh}, txn, block) do
-    txn_id = txn.id |> Base.decode16!(case: :lower)
-    [{txn_id, block.hash} | retrieve(pkh, :pkh_index)]
+    #txn_id = txn.txn_id |> Base.decode16!(case: :lower)
+    #[{txn_id, block.hash} | retrieve(pkh, :pkh_index)]
+    block_height = :gpb.encode_varint(block.height)
+    txn_idx = :gpb.encode_varint(txn.idx)
+    [block_height <> txn_idx | retrieve(pkh, :pkh_index)]
     |> store(pkh, :pkh_index)
   end
   defp add_to_db({:sh, sh}, txn, block) do
-    txn_id = txn.id |> Base.decode16!(case: :lower)
-    [{txn_id, block.hash} | retrieve(sh, :sh_index)]
+    #txn_id = txn.txn_id |> Base.decode16!(case: :lower)
+    #[{txn_id, block.hash} | retrieve(sh, :sh_index)]
+    block_height = :gpb.encode_varint(block.height)
+    txn_idx = :gpb.encode_varint(txn.idx)
+    [block_height <> txn_idx | retrieve(sh, :sh_index)]
     |> store(sh, :sh_index)
   end
   defp add_to_db({:op_return, data}, txn, block) do
-    txn_id = txn.id |> Base.decode16!(case: :lower)
-    :op_return |> :ets.insert({txn_id, block.hash, %{height: block.height, data: data}})
+    #txn_id = txn.txn_id |> Base.decode16!(case: :lower)
+    #:op_return |> :ets.insert({txn_id, block.hash, %{height: block.height, data: data}})
+    block_height = :gpb.encode_varint(block.height)
+    txn_idx = :gpb.encode_varint(txn.idx)
+    :op_return |> :ets.insert({block_height <> txn_idx, data})
   end
   defp add_to_db({:coinbase, _script}, _txn, _block), do: nil
   defp add_to_db({:empty}, _txn, _block), do: nil
   defp add_to_db({:error, reason, inoutput}, txn, _block) do
     Logger.error """
 Explorer: #{reason}:
-  txn_id: #{txn.id}
+  txn_id: #{txn.txn_id}
   #{inspect(inoutput)}
 """
   end
@@ -195,6 +205,9 @@ Explorer: #{reason}:
     block = block
     |> Map.put(:hash, block.hash |> Base.decode16!(case: :lower))
 
+    block.txns
+    |> Enum.map(&(&1 |> Base.decode16!(case: :lower)))
+    |> store(block.height, :blocks)
     if block.confirmations < @conf_cnt do
       block
       |> store(block.hash, :unconfirmed)
@@ -205,7 +218,8 @@ Explorer: #{reason}:
       txns = case @batch_rpc do
                false ->
                  block.txns
-                 |> Enum.map(fn(txn_id) ->
+                 |> Enum.with_index
+                 |> Enum.map(fn({txn_id, idx}) ->
                    txn = txn_id
                    |> RPC.gettransaction!
 
@@ -215,9 +229,12 @@ Explorer: #{reason}:
                    inputs = txn.inputs
                    |> Enum.map(&(parse_script(&1)))
 
-                   %{id: txn_id, outputs: outputs, inputs: inputs}
+                   %{idx: idx, txn_id: txn_id, outputs: outputs, inputs: inputs}
                  end)
                true ->
+                 idx_map = block.txns
+                 |> Enum.with_index
+                 |> Enum.into(%{})
                  block.txns
                  |> RPC.gettransactions!
                  |> Enum.map(fn {txn_id, txn} ->
@@ -227,7 +244,7 @@ Explorer: #{reason}:
                    inputs = txn.inputs
                    |> Enum.map(&(parse_script(&1)))
 
-                   %{id: txn_id, outputs: outputs, inputs: inputs}
+                   %{idx: idx_map |> Map.get(txn_id), txn_id: txn_id, outputs: outputs, inputs: inputs}
                  end)
              end
 

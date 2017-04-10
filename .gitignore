@@ -28,3 +28,6 @@ bootstrap.min.css
 
 # Docker binary folder
 docker/rel/
+
+# ETS table exports
+*.ets
