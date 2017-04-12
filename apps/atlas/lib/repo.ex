@@ -200,8 +200,10 @@ defmodule Mercator.Atlas.Repo do
       txns
       |> Enum.each(fn(txn) ->
         txn.outputs
+        |> Enum.with_index
         |> Enum.each(&(DB.add_output(&1, txn, block)))
         txn.inputs
+        |> Enum.with_index
         |> Enum.each(&(DB.add_input(&1, txn, block)))
       end)
 
