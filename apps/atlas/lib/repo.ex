@@ -177,6 +177,7 @@ defmodule Mercator.Atlas.Repo do
                    inputs = txn.inputs
                    |> Enum.map(&(parse_script(&1)))
 
+                   txn_id = txn_id |> Base.decode16(case: :lower)
                    %{idx: idx, txn_id: txn_id, outputs: outputs, inputs: inputs}
                  end)
                true ->
@@ -190,9 +191,11 @@ defmodule Mercator.Atlas.Repo do
                    |> Enum.map(&(parse_script(&1)))
 
                    inputs = txn.inputs
-                   |> Enum.map(&(parse_script(&1)))
+                   |> Enum.map(&({parse_script(&1), &1.previous_output}))
 
-                   %{idx: idx_map |> Map.get(txn_id), txn_id: txn_id, outputs: outputs, inputs: inputs}
+                   idx = idx_map |> Map.get(txn_id)
+                   txn_id = txn_id |> Base.decode16!(case: :lower)
+                   %{idx: idx, txn_id: txn_id, outputs: outputs, inputs: inputs}
                  end)
              end
 
@@ -201,10 +204,10 @@ defmodule Mercator.Atlas.Repo do
       |> Enum.each(fn(txn) ->
         txn.outputs
         |> Enum.with_index
-        |> Enum.each(&(DB.add_output(&1, txn, block)))
+        |> Enum.each(fn({parsed, idx}) -> DB.add_output(parsed, idx, txn, block) end)
         txn.inputs
         |> Enum.with_index
-        |> Enum.each(&(DB.add_input(&1, txn, block)))
+        |> Enum.each(fn({{parsed, prev_out}, idx}) -> DB.add_input(parsed, idx, txn, block, prev_out) end)
       end)
 
       %{height: block.height}
