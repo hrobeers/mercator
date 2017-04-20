@@ -30,6 +30,60 @@ defmodule Mercator.Atlas.Repo do
     GenServer.start_link(__MODULE__, :ok, name: __MODULE__)
   end
 
+  def list_unspent!(address) do
+    # TODO optimize this query with custom RPC call
+
+    # Expand varint array into indexes
+    expanded_keys = address
+    |> Address.raw()
+    |> DB.list_outputs
+    |> Enum.map(fn(output_key) ->
+      {height, stream} = :gpb.decode_varint(output_key)
+      {txn_idx, stream} = :gpb.decode_varint(stream)
+      {output_idx, stream} = :gpb.decode_varint(stream)
+      {height, {txn_idx, output_idx}}
+    end)
+    |> IO.inspect
+
+    # Fetch each block
+    block_txns = expanded_keys
+    |> Enum.unzip
+    |> Tuple.to_list
+    |> hd
+    |> Enum.map(fn(height) ->
+      # TODO use batch RPC (not supported in ppcoin v0.5)
+      hash = :rpc |> Gold.getblockhash!(height)
+      block = :rpc |> Gold.getblock!(hash)
+      {height, block.txns}
+    end)
+    |> Enum.into(%{})
+
+    # Filter all unspent
+    expanded_keys = expanded_keys
+    |> Enum.filter(fn({height, {txn_idx, out_idx}}) ->
+      txn_id = block_txns[height] |> Enum.at(txn_idx) |> Base.decode16!(case: :lower)
+      spent_key = txn_id <> :gpb.encode_varint(out_idx)
+      case DB.retrieve(spent_key, :unspent) do
+        [] -> false
+        _ -> true
+      end
+    end)
+
+    # Fetch all outputs (transaction rpc calls are cached)
+    expanded_keys
+    |> Enum.map(fn({height, {txn_idx, out_idx}}) ->
+      txn_id = block_txns[height]
+      |> Enum.at(txn_idx)
+      %Bitcoin.Protocol.Types.TransactionOutput{:pk_script => script, :value => satoshis} = txn_id
+      |> RPC.gettransaction!
+      |> Map.get(:outputs)
+      |> Enum.at(out_idx)
+      %{txid: txn_id, vout: out_idx, scriptPubKey: script |> Base.encode16(case: :lower), satoshis: satoshis}
+    end)
+
+    # test: u = "mwxcZZF7Kg8fTWsaVHKJLGQeLvUrop72Mi" |> BitcoinTool.RawAddress.from_address(%BitcoinTool.Config{}) |> Mercator.Atlas.Repo.list_unspent!
+  end
+
   ## Server Callbacks
 
   def init(:ok) do

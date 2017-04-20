@@ -14,6 +14,31 @@ defmodule Mercator.Atlas.DB do
     end
   end
 
+  ## Client API
+
+  def add_input(input, idx, txn, block, prev_out) do
+    # TODO mark spent
+    txn_key = txn.txn_id <> varint(txn.idx)
+    prev_out |> mark_spent(txn_key)
+    #add_inoutput(input, txn_key)
+  end
+
+  def add_output(output, idx, txn, block) do
+    output_key = txn.txn_id <> varint(idx)
+    if not is_spent?(output_key) do
+      false |> store(output_key, :unspent)
+    end
+    add_inoutput(output, varint(block.height) <> varint(txn.idx) <> varint(idx)) # TODO txn_key -> output_key
+  end
+
+  def list_outputs(pkh) do
+    # TODO support sh
+    pkh
+    |> retrieve(:pkh_index)
+  end
+
+  ## Internal
+
   def init() do
     :ets.new(:pkh_index, [:set, :public, :named_table])
     :ets.new(:sh_index, [:set, :public, :named_table])
@@ -41,22 +66,6 @@ defmodule Mercator.Atlas.DB do
     :ets.delete(table, key)
   end
 
-  def add_input(input, idx, txn, block, prev_out) do
-    # TODO mark spent
-    txn_key = txn.txn_id <> varint(txn.idx)
-    prev_out |> mark_spent(txn_key)
-    #add_inoutput(input, txn_key)
-  end
-
-  def add_output(output, idx, txn, block) do
-    txn_key = varint(block.height) <> varint(txn.idx)
-    output_key = txn.txn_id <> varint(idx)
-    if not is_spent?(output_key) do
-      false |> store(output_key, :unspent)
-    end
-    add_inoutput(output, txn_key)
-  end
-
   defp mark_spent(%Outpoint{hash: <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>>},_) do
     # ignore
@@ -81,24 +90,24 @@ defmodule Mercator.Atlas.DB do
     end
   end
 
-  defp add_inoutput({:pkh, pkh}, txn_key) do
-    [txn_key | retrieve(pkh, :pkh_index)]
+  defp add_inoutput({:pkh, pkh}, output_key) do
+    [output_key | retrieve(pkh, :pkh_index)]
     |> store(pkh, :pkh_index)
   end
-  defp add_inoutput({:sh, sh}, txn_key) do
-    [txn_key | retrieve(sh, :sh_index)]
+  defp add_inoutput({:sh, sh}, output_key) do
+    [output_key | retrieve(sh, :sh_index)]
     |> store(sh, :sh_index)
   end
-  defp add_inoutput({:op_return, data}, txn_key) do
-    :op_return |> :ets.insert({txn_key, data})
+  defp add_inoutput({:op_return, data}, output_key) do
+    :op_return |> :ets.insert({output_key, data})
   end
-  defp add_inoutput({:coinbase, _script}, _txn_key), do: nil
-  defp add_inoutput({:empty}, _txn_key), do: nil
-  defp add_inoutput({:error, reason, inoutput}, txn_key) do
-    # TODO: decode txn_key
+  defp add_inoutput({:coinbase, _script}, _output_key), do: nil
+  defp add_inoutput({:empty}, _output_key), do: nil
+  defp add_inoutput({:error, reason, inoutput}, output_key) do
+    # TODO: decode output_key
     Logger.error """
 Atlas: #{reason}:
-  txn_key: #{txn_key}
+  output_key: #{output_key}
   #{inspect(inoutput)}
 """
   end
