@@ -2,27 +2,34 @@ defmodule BitcoinTool.RawAddress do
   defstruct raw: nil,
             lazy_base58check: nil
 
-  def from_pkh(pkh, config) do
+  def from_address!(address) do
+    {prefix, pkh} = address |> Base58Check.decode58check
+
     %BitcoinTool.RawAddress{
-      raw: pkh,
-      lazy_base58check: fn () ->
-        config.network
-        |> BitcoinTool.Network.get
-        |> Map.get(:public_key_prefix)
-        |> Base58Check.encode58check(pkh)
-      end
+      raw: prefix <> pkh,
+      lazy_base58check: fn() -> prefix |> Base58Check.encode58check(pkh) end
     }
   end
 
-  def from_sh(sh, config) do
+  def from_pkh!(pkh, config) do
+    prefix = config.network
+    |> BitcoinTool.Network.get
+    |> Map.get(:public_key_prefix)
+
     %BitcoinTool.RawAddress{
-      raw: sh,
-      lazy_base58check: fn () ->
-        config.network
-        |> BitcoinTool.Network.get
-        |> Map.get(:script_prefix)
-        |> Base58Check.encode58check(sh)
-      end
+      raw: prefix <> pkh,
+      lazy_base58check: fn() -> prefix |> Base58Check.encode58check(pkh) end
+    }
+  end
+
+  def from_sh!(sh, config) do
+    prefix = config.network
+    |> BitcoinTool.Network.get
+    |> Map.get(:script_prefix)
+
+    %BitcoinTool.RawAddress{
+      raw: prefix <> sh,
+      lazy_base58check: fn() -> prefix |> Base58Check.encode58check(sh) end
     }
   end
 end

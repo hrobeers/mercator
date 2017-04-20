@@ -28,7 +28,7 @@ defmodule Mercator.RPCTest do
     |> script_to_txout
     |> Script.parse_address!
 
-    assert address |> Address.raw == <<197, 195, 181, 94, 16, 241, 193, 56, 10, 14, 215, 124, 72, 60, 119, 199, 238, 139, 246, 161>>
+    assert address |> Address.raw == <<111, 197, 195, 181, 94, 16, 241, 193, 56, 10, 14, 215, 124, 72, 60, 119, 199, 238, 139, 246, 161>>
     assert address |> Address.base58check == "myYdruaHPoL2HMm8eSbTtn2kQ8PTuZSoYJ"
   end
 

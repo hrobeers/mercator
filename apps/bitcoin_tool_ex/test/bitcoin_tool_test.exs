@@ -119,21 +119,21 @@ defmodule BitcoinToolTest do
   end
 
   test "RawAddress.from_pkh" do
-    hex = "70ca5c06a6b9a47423887043b842e6d93fd49056"
-    pkh = hex |> Base.decode16!(case: :lower)
-    raw_address = pkh |> BitcoinTool.RawAddress.from_pkh(%BitcoinTool.Config{network: "peercoin"})
+    hex = "3770ca5c06a6b9a47423887043b842e6d93fd49056"
+    <<prefix :: binary - size(1), pkh :: binary>> = hex |> Base.decode16!(case: :lower)
+    raw_address = pkh |> BitcoinTool.RawAddress.from_pkh!(%BitcoinTool.Config{network: "peercoin"})
 
-    assert raw_address |> Address.raw == pkh
+    assert raw_address |> Address.raw == prefix <> pkh
     assert raw_address |> Address.hex == hex
     assert raw_address |> Address.base58check == "PJsZFe8kFmzBoq5svmfZ9pcGMQ2zDpPpDR"
   end
 
   test "RawAddress.from_sh" do
-    hex = "2a02dfd19c9108ad48878a01bfe53deaaf30cca4"
-    sh = hex |> Base.decode16!(case: :lower)
-    raw_address = sh |> BitcoinTool.RawAddress.from_sh(%BitcoinTool.Config{network: "peercoin-testnet"})
+    hex = "c42a02dfd19c9108ad48878a01bfe53deaaf30cca4"
+    <<prefix :: binary - size(1), sh :: binary>> = hex |> Base.decode16!(case: :lower)
+    raw_address = sh |> BitcoinTool.RawAddress.from_sh!(%BitcoinTool.Config{network: "peercoin-testnet"})
 
-    assert raw_address |> Address.raw == sh
+    assert raw_address |> Address.raw == prefix <> sh
     assert raw_address |> Address.hex == hex
     assert raw_address |> Address.base58check == "2Mw5Mp3rxiWU82qJe546eciLb6gp1KieBBx"
   end

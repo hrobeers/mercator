@@ -81,7 +81,7 @@ defmodule Mercator.Atlas.Repo do
       %{txid: txn_id, vout: out_idx, scriptPubKey: script |> Base.encode16(case: :lower), satoshis: satoshis}
     end)
 
-    # test: u = "mwxcZZF7Kg8fTWsaVHKJLGQeLvUrop72Mi" |> BitcoinTool.RawAddress.from_address(%BitcoinTool.Config{}) |> Mercator.Atlas.Repo.list_unspent!
+    # test: u = "mwxcZZF7Kg8fTWsaVHKJLGQeLvUrop72Mi" |> BitcoinTool.RawAddress.from_address!() |> Mercator.Atlas.Repo.list_unspent!
   end
 
   ## Server Callbacks

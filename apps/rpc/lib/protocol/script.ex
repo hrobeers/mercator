@@ -20,7 +20,7 @@ defmodule Bitcoin.Protocol.Types.Script do
     case script do
       # P2PKH output: OP_DUP OP_HASH160 20 <pubKeyHash> OP_EQUALVERIFY OP_CHECKSIG
       <<118, 169, 20, pkh :: bytes-size(20), 136, 172>> ->
-        {:address, pkh |> BitcoinTool.RawAddress.from_pkh(%BitcoinTool.Config{network: @network})}
+        {:address, pkh |> BitcoinTool.RawAddress.from_pkh!(%BitcoinTool.Config{network: @network})}
 
       # P2PK output (compressed): 33 <pubkey> OP_CHECKSIG
       <<33, pk :: bytes-size(33), 172>> ->
