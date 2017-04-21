@@ -17,10 +17,8 @@ defmodule Mercator.Atlas.DB do
   ## Client API
 
   def add_input(input, idx, txn, block, prev_out) do
-    # TODO mark spent
     txn_key = txn.txn_id <> varint(txn.idx)
     prev_out |> mark_spent(txn_key)
-    #add_inoutput(input, txn_key)
   end
 
   def add_output(output, idx, txn, block) do
@@ -32,9 +30,17 @@ defmodule Mercator.Atlas.DB do
   end
 
   def list_outputs(pkh) do
-    # TODO support sh
     pkh
     |> retrieve(:address_index)
+  end
+
+  def persist!() do
+    # TODO log warning or error on failure
+    :ok = :file.make_dir('db')
+    :ok = :spent |> :ets.tab2file('db/spent.ets')
+    :ok = :unspent |> :ets.tab2file('db/unspent.ets')
+    :ok = :op_return |> :ets.tab2file('db/op_return.ets')
+    :ok = :address_index |> :ets.tab2file('db/address_index.ets')
   end
 
   ## Internal

@@ -173,6 +173,9 @@ defmodule Mercator.Atlas.Repo do
     if (high-low > 1000) do
       range = Integer.to_string(low) <> " - " <> Integer.to_string(high)
       Logger.info("Atlas.Repo: Parsing blocks in range: " <> range <> " progress: 100%")
+      # TODO persist every once in a while
+      DB.persist!()
+      Logger.info("Atlas.Repo: DB persisted to disk")
     end
 
     high |> DB.store(:high_cnt, :address_index)
