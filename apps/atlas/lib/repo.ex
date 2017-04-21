@@ -43,7 +43,6 @@ defmodule Mercator.Atlas.Repo do
       {output_idx, stream} = :gpb.decode_varint(stream)
       {height, {txn_idx, output_idx}}
     end)
-    |> IO.inspect
 
     # Fetch each block
     block_txns = expanded_keys
@@ -82,6 +81,7 @@ defmodule Mercator.Atlas.Repo do
     end)
 
     # test: u = "mwxcZZF7Kg8fTWsaVHKJLGQeLvUrop72Mi" |> BitcoinTool.RawAddress.from_address!() |> Mercator.Atlas.Repo.list_unspent!
+    # u = "mqbaPiF7V6gDV8gRWNc8zDyW5c9T932Nuk" |> BitcoinTool.RawAddress.from_address!() |> Mercator.Atlas.Repo.list_unspent!
   end
 
   ## Server Callbacks
@@ -97,10 +97,7 @@ defmodule Mercator.Atlas.Repo do
       block_cnt = :rpc |> Gold.getblockcount!
       Logger.info("Atlas.Repo: RPC connection initialized (reload_interval: " <> Integer.to_string(reload_interval) <> ")")
       # Init the ETS tables
-      :ok = DB.init()
-      # Set initial parsing state
-      DB.store(start_height(block_cnt), :low_cnt, :address_index)
-      DB.store(start_height(block_cnt), :high_cnt, :address_index)
+      :ok = DB.init(start_height(block_cnt))
       # Init the task supervisor
       Task.Supervisor.start_link(name: @tasksup_name)
       # Initial blockchain parse (TODO: persistent storage)
@@ -170,6 +167,8 @@ defmodule Mercator.Atlas.Repo do
   end
 
   def handle_cast({:parsing_done, low, high}, state) do
+    high |> DB.store(:high_cnt, :address_index)
+
     if (high-low > 1000) do
       range = Integer.to_string(low) <> " - " <> Integer.to_string(high)
       Logger.info("Atlas.Repo: Parsing blocks in range: " <> range <> " progress: 100%")
@@ -178,7 +177,6 @@ defmodule Mercator.Atlas.Repo do
       Logger.info("Atlas.Repo: DB persisted to disk")
     end
 
-    high |> DB.store(:high_cnt, :address_index)
     {:noreply, state |> Map.put(:parsing, false)}
   end
 

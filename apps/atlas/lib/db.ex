@@ -35,8 +35,14 @@ defmodule Mercator.Atlas.DB do
   end
 
   def persist!() do
+    # Ignore error if already exists
+    File.mkdir("db")
+    # Backup previous
+    File.ls!("db")
+    |> Enum.filter(&(&1 |> String.ends_with?(".bak") == false))
+    |> Enum.each(&(File.rename("db/" <> &1, "db/" <> &1 <> ".bak")))
+    # Save to disk
     # TODO log warning or error on failure
-    :ok = :file.make_dir('db')
     :ok = :spent |> :ets.tab2file('db/spent.ets')
     :ok = :unspent |> :ets.tab2file('db/unspent.ets')
     :ok = :op_return |> :ets.tab2file('db/op_return.ets')
@@ -45,13 +51,28 @@ defmodule Mercator.Atlas.DB do
 
   ## Internal
 
-  def init() do
-    :ets.new(:address_index, [:set, :public, :named_table])
-    :ets.new(:op_return, [:set, :public, :named_table])
-    :ets.new(:spent, [:set, :public, :named_table])
-    :ets.new(:unspent, [:set, :public, :named_table])
+  def init(start_height) do
+    if File.exists?("db") do
+      # TODO log warning or error on failure
+      {:ok, :spent} = :ets.file2tab('db/spent.ets')
+      {:ok, :unspent} = :ets.file2tab('db/unspent.ets')
+      {:ok, :op_return} = :ets.file2tab('db/op_return.ets')
+      {:ok, :address_index} = :ets.file2tab('db/address_index.ets')
+      retrieve(:low_cnt, :address_index) |> IO.inspect
+      retrieve(:high_cnt, :address_index) |> IO.inspect
+    else
+      :ets.new(:address_index, [:set, :public, :named_table])
+      :ets.new(:op_return, [:set, :public, :named_table])
+      :ets.new(:spent, [:set, :public, :named_table])
+      :ets.new(:unspent, [:set, :public, :named_table])
+      # Set initial parsing state
+      store(start_height, :low_cnt, :address_index)
+      store(start_height, :high_cnt, :address_index)
+    end
+
     :ets.new(:unconfirmed, [:set, :protected, :named_table])
     #:ets.new(:blocks, [:set, :protected, :named_table])
+
     :ok
   end
 
