@@ -34,19 +34,18 @@ defmodule Mercator.Atlas.DB do
   def list_outputs(pkh) do
     # TODO support sh
     pkh
-    |> retrieve(:pkh_index)
+    |> retrieve(:address_index)
   end
 
   ## Internal
 
   def init() do
-    :ets.new(:pkh_index, [:set, :public, :named_table])
-    :ets.new(:sh_index, [:set, :public, :named_table])
+    :ets.new(:address_index, [:set, :public, :named_table])
     :ets.new(:op_return, [:set, :public, :named_table])
     :ets.new(:spent, [:set, :public, :named_table])
     :ets.new(:unspent, [:set, :public, :named_table])
     :ets.new(:unconfirmed, [:set, :protected, :named_table])
-    :ets.new(:blocks, [:set, :protected, :named_table])
+    #:ets.new(:blocks, [:set, :protected, :named_table])
     :ok
   end
 
@@ -90,13 +89,9 @@ defmodule Mercator.Atlas.DB do
     end
   end
 
-  defp add_inoutput({:pkh, pkh}, output_key) do
-    [output_key | retrieve(pkh, :pkh_index)]
-    |> store(pkh, :pkh_index)
-  end
-  defp add_inoutput({:sh, sh}, output_key) do
-    [output_key | retrieve(sh, :sh_index)]
-    |> store(sh, :sh_index)
+  defp add_inoutput({:address, pkh}, output_key) do
+    [output_key | retrieve(pkh, :address_index)]
+    |> store(pkh, :address_index)
   end
   defp add_inoutput({:op_return, data}, output_key) do
     :op_return |> :ets.insert({output_key, data})

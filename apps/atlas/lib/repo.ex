@@ -99,8 +99,8 @@ defmodule Mercator.Atlas.Repo do
       # Init the ETS tables
       :ok = DB.init()
       # Set initial parsing state
-      DB.store(start_height(block_cnt), :low_cnt, :pkh_index)
-      DB.store(start_height(block_cnt), :high_cnt, :pkh_index)
+      DB.store(start_height(block_cnt), :low_cnt, :address_index)
+      DB.store(start_height(block_cnt), :high_cnt, :address_index)
       # Init the task supervisor
       Task.Supervisor.start_link(name: @tasksup_name)
       # Initial blockchain parse (TODO: persistent storage)
@@ -127,7 +127,7 @@ defmodule Mercator.Atlas.Repo do
           state = state |> Map.put(:connected, true)
 
           # Parse new blocks when they arrived
-          high_cnt = DB.retrieve(:high_cnt, :pkh_index)
+          high_cnt = DB.retrieve(:high_cnt, :address_index)
           cond do
             high_cnt == block_cnt ->
               Logger.info("Atlas.Repo: up to date")
@@ -175,7 +175,7 @@ defmodule Mercator.Atlas.Repo do
       Logger.info("Atlas.Repo: Parsing blocks in range: " <> range <> " progress: 100%")
     end
 
-    high |> DB.store(:high_cnt, :pkh_index)
+    high |> DB.store(:high_cnt, :address_index)
     {:noreply, state |> Map.put(:parsing, false)}
   end
 
@@ -207,9 +207,9 @@ defmodule Mercator.Atlas.Repo do
     block = block
     |> Map.put(:hash, block.hash |> Base.decode16!(case: :lower))
 
-    block.txns
-    |> Enum.map(&(&1 |> Base.decode16!(case: :lower)))
-    |> DB.store(block.height, :blocks)
+    #block.txns
+    #|> Enum.map(&(&1 |> Base.decode16!(case: :lower)))
+    #|> DB.store(block.height, :blocks)
     if block.confirmations < @conf_cnt do
       block
       |> DB.store(block.hash, :unconfirmed)
@@ -271,7 +271,7 @@ defmodule Mercator.Atlas.Repo do
   defp parse_script(inoutput) do
     parsed = inoutput |> Script.parse
     case parsed do
-      {:address, addr} -> {:pkh, Address.raw(addr)}
+      {:address, addr} -> {:address, Address.raw(addr)}
       other -> other
     end
   end

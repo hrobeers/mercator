@@ -32,7 +32,7 @@ defmodule Bitcoin.Protocol.Types.Script do
 
       # P2SH output: OP_HASH160 20 <scriptHash> OP_EQUAL
       <<169, 20, sh :: bytes-size(20), 135>> ->
-        {:sh, sh}
+        {:address, sh |> BitcoinTool.RawAddress.from_sh!(%BitcoinTool.Config{network: @network})}
 
       # OP_RETURN
       <<106, _data :: binary>> ->
