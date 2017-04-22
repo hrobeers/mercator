@@ -19,6 +19,7 @@ defmodule Mercator.Atlas.Repo do
 
   @tasksup_name String.to_atom(Atom.to_string(__MODULE__) <> ".TaskSup")
   @batch_rpc Application.get_env(:atlas, :batch_rpc) # Read at compile time
+  @satoshi_exponent Application.get_env(:gold, :satoshi_exponent) # Read at compile time
   @conf_cnt 10
 
   ## Client API
@@ -40,7 +41,7 @@ defmodule Mercator.Atlas.Repo do
     |> Enum.map(fn(output_key) ->
       {height, stream} = :gpb.decode_varint(output_key)
       {txn_idx, stream} = :gpb.decode_varint(stream)
-      {output_idx, stream} = :gpb.decode_varint(stream)
+      {output_idx, _stream} = :gpb.decode_varint(stream)
       {height, {txn_idx, output_idx}}
     end)
 
@@ -79,11 +80,23 @@ defmodule Mercator.Atlas.Repo do
       |> RPC.gettransaction!
       |> Map.get(:outputs)
       |> Enum.at(out_idx)
-      %{txid: txn_id, vout: out_idx, scriptPubKey: script |> Base.encode16(case: :lower), satoshis: satoshis}
+      %{
+        txid: txn_id,
+        vout: out_idx,
+        scriptPubKey: script |> Base.encode16(case: :lower),
+        satoshis: satoshis,
+        amount: satoshis / :math.pow(10,@satoshi_exponent)
+      }
     end)
 
     # test: u = "mwxcZZF7Kg8fTWsaVHKJLGQeLvUrop72Mi" |> BitcoinTool.RawAddress.from_address!() |> Mercator.Atlas.Repo.list_unspent!
     # u = "mqbaPiF7V6gDV8gRWNc8zDyW5c9T932Nuk" |> BitcoinTool.RawAddress.from_address!() |> Mercator.Atlas.Repo.list_unspent!
+  end
+
+  def balance!(address) do
+    satoshis = list_unspent!(address)
+    |> Enum.reduce(0, fn(unspent, acc) -> unspent.satoshis + acc end)
+    satoshis / :math.pow(10,@satoshi_exponent)
   end
 
   ## Server Callbacks
@@ -97,7 +110,7 @@ defmodule Mercator.Atlas.Repo do
     try do
       # Check the connection
       block_cnt = :rpc |> Gold.getblockcount!
-      Logger.info("Atlas.Repo: RPC connection initialized (reload_interval: " <> Integer.to_string(reload_interval) <> ")")
+      Logger.info("Atlas.Repo: RPC connection initialized (reload_interval: " <> Integer.to_string(reload_interval()) <> ")")
       # Init the ETS tables
       :ok = DB.init(start_height(block_cnt))
       # Init the task supervisor
@@ -144,7 +157,7 @@ defmodule Mercator.Atlas.Repo do
           state |> Map.put(:connected, false)# no connection, just ignore until restored
       end
 
-    parse_new_blocks(reload_interval)
+    parse_new_blocks(reload_interval())
     {:noreply, new_state}
   end
 
@@ -233,7 +246,7 @@ defmodule Mercator.Atlas.Repo do
                    |> Enum.map(&(parse_script(&1)))
 
                    inputs = txn.inputs
-                   |> Enum.map(&(parse_script(&1)))
+                   |> Enum.map(&(&1.previous_output))
 
                    txn_id = txn_id |> Base.decode16(case: :lower)
                    %{idx: idx, txn_id: txn_id, outputs: outputs, inputs: inputs}
@@ -249,7 +262,7 @@ defmodule Mercator.Atlas.Repo do
                    |> Enum.map(&(parse_script(&1)))
 
                    inputs = txn.inputs
-                   |> Enum.map(&({parse_script(&1), &1.previous_output}))
+                   |> Enum.map(&(&1.previous_output))
 
                    idx = idx_map |> Map.get(txn_id)
                    txn_id = txn_id |> Base.decode16!(case: :lower)
@@ -264,8 +277,7 @@ defmodule Mercator.Atlas.Repo do
         |> Enum.with_index
         |> Enum.each(fn({parsed, idx}) -> DB.add_output(parsed, idx, txn, block) end)
         txn.inputs
-        |> Enum.with_index
-        |> Enum.each(fn({{parsed, prev_out}, idx}) -> DB.add_input(parsed, idx, txn, block, prev_out) end)
+        |> Enum.each(fn(prev_out) -> DB.add_input(txn, prev_out) end)
       end)
 
       %{height: block.height}

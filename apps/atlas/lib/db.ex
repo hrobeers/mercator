@@ -16,7 +16,7 @@ defmodule Mercator.Atlas.DB do
 
   ## Client API
 
-  def add_input(input, idx, txn, block, prev_out) do
+  def add_input(txn, prev_out) do
     txn_key = txn.txn_id <> varint(txn.idx)
     prev_out |> mark_spent(txn_key)
   end
@@ -32,6 +32,7 @@ defmodule Mercator.Atlas.DB do
   def list_outputs(pkh) do
     pkh
     |> retrieve(:address_index)
+    |> Enum.uniq # TODO investigate why doubles
   end
 
   def persist!() do
@@ -110,7 +111,7 @@ defmodule Mercator.Atlas.DB do
   defp is_spent?(output_key) do
     case output_key |> retrieve(:spent) do
       [] -> false
-      tx_key ->
+      _tx_key -> # TODO are we interested in tx_key?
         output_key |> delete(:spent)
         true
     end
