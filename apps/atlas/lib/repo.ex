@@ -63,8 +63,10 @@ defmodule Mercator.Atlas.Repo do
       txn_id = block_txns[height] |> Enum.at(txn_idx) |> Base.decode16!(case: :lower)
       spent_key = txn_id <> :gpb.encode_varint(out_idx)
       case DB.retrieve(spent_key, :unspent) do
+        # Not found in unspent
         [] -> false
-        _ -> true
+        # Found in unspent, true if not found in spent
+        _ -> DB.retrieve(spent_key, :spent) == []
       end
     end)
 
@@ -100,7 +102,7 @@ defmodule Mercator.Atlas.Repo do
       :ok = DB.init(start_height(block_cnt))
       # Init the task supervisor
       Task.Supervisor.start_link(name: @tasksup_name)
-      # Initial blockchain parse (TODO: persistent storage)
+      # Initial blockchain parse
       parse_new_blocks(1)
       {:ok, %{connected: true, parsing: false, start_time: DateTime.to_unix(DateTime.utc_now)}}
     rescue
@@ -172,6 +174,7 @@ defmodule Mercator.Atlas.Repo do
     if (high-low > 1000) do
       range = Integer.to_string(low) <> " - " <> Integer.to_string(high)
       Logger.info("Atlas.Repo: Parsing blocks in range: " <> range <> " progress: 100%")
+      # TODO trigger spent table cleanup (via DB)
       # TODO persist every once in a while
       DB.persist!()
       Logger.info("Atlas.Repo: DB persisted to disk")
