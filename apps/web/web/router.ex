@@ -19,16 +19,23 @@ defmodule Mercator.Web.Router do
     get "/", PageController, :index
   end
 
-  scope "/api/v1/block", Mercator.Web do
+  scope "/api/unstable/block", Mercator.Web do
     pipe_through :api
 
     get "/info/:height", BlockController, :info
   end
 
-  scope "/api/v1/tx", Mercator.Web do
+  scope "/api/unstable/tx", Mercator.Web do
     pipe_through :api
 
     post "/push", TxController, :push
+  end
+
+  scope "/api/unstable/address", Mercator.Web do
+    pipe_through :api
+
+    get "/unspent/:address", AddressController, :unspent
+    get "/balance/:address", AddressController, :balance
   end
 
   # Other scopes may use custom stacks.

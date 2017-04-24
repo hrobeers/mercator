@@ -1,8 +1,8 @@
 defmodule Mercator.Web.BlockControllerTest do
   use Mercator.Web.ConnCase
 
-  test "GET /api/v1/block/info", %{conn: conn} do
-    conn = get conn, "/api/v1/block/info/12321"
+  test "GET /api/unstable/block/info", %{conn: conn} do
+    conn = get conn, "/api/unstable/block/info/12321"
     decoded = conn.resp_body |> Poison.decode!
 
     assert decoded["height"] == 12321
