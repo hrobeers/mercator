@@ -14,6 +14,13 @@ defmodule Mercator.Atlas.DB do
     end
   end
 
+  defp db_dir() do
+    case Application.get_env(:atlas, :db_dir) do
+      nil -> :no_db
+      path -> {:ok, path}
+    end
+  end
+
   ## Client API
 
   def add_input(txn, prev_out) do
@@ -36,40 +43,42 @@ defmodule Mercator.Atlas.DB do
   end
 
   def persist!() do
-    # Ignore error if already exists
-    File.mkdir("db")
-    # Backup previous
-    File.ls!("db")
-    |> Enum.filter(&(&1 |> String.ends_with?(".bak") == false))
-    |> Enum.each(&(File.rename("db/" <> &1, "db/" <> &1 <> ".bak")))
-    # Save to disk
-    # TODO log warning or error on failure
-    :ok = :spent |> :ets.tab2file('db/spent.ets')
-    :ok = :unspent |> :ets.tab2file('db/unspent.ets')
-    :ok = :op_return |> :ets.tab2file('db/op_return.ets')
-    :ok = :address_index |> :ets.tab2file('db/address_index.ets')
+    persist!(db_dir())
   end
 
   ## Internal
 
   def init(start_height) do
-    if File.exists?("db") do
-      # TODO log warning or error on failure
-      {:ok, :spent} = :ets.file2tab('db/spent.ets')
-      {:ok, :unspent} = :ets.file2tab('db/unspent.ets')
-      {:ok, :op_return} = :ets.file2tab('db/op_return.ets')
-      {:ok, :address_index} = :ets.file2tab('db/address_index.ets')
+    init(start_height, db_dir())
+  end
+
+  defp init(start_height, {:ok, db}) do
+    db = db |> String.to_charlist
+    if File.exists?(db) do
+      # TODO log warning or error on failure & improve robustness
+      {:ok, :spent} = :filename.join(db, 'spent.ets') |> :ets.file2tab()
+      {:ok, :unspent} = :filename.join(db, 'unspent.ets') |> :ets.file2tab()
+      {:ok, :op_return} = :filename.join(db, 'op_return.ets') |> :ets.file2tab()
+      {:ok, :address_index} = :filename.join(db, 'address_index.ets') |> :ets.file2tab()
       retrieve(:low_cnt, :address_index) |> IO.inspect
       retrieve(:high_cnt, :address_index) |> IO.inspect
+
+      :ets.new(:unconfirmed, [:set, :protected, :named_table])
+      #:ets.new(:blocks, [:set, :protected, :named_table])
     else
-      :ets.new(:address_index, [:set, :public, :named_table])
-      :ets.new(:op_return, [:set, :public, :named_table])
-      :ets.new(:spent, [:set, :public, :named_table])
-      :ets.new(:unspent, [:set, :public, :named_table])
-      # Set initial parsing state
-      store(start_height, :low_cnt, :address_index)
-      store(start_height, :high_cnt, :address_index)
+      init(start_height, :no_db)
     end
+    :ok
+  end
+  defp init(start_height, :no_db) do
+    # TODO consider :bag & :ordered_set for tables (compare size & performance)
+    :ets.new(:address_index, [:set, :public, :named_table])
+    :ets.new(:op_return, [:set, :public, :named_table])
+    :ets.new(:spent, [:set, :public, :named_table])
+    :ets.new(:unspent, [:set, :public, :named_table])
+    # Set initial parsing state
+    store(start_height, :low_cnt, :address_index)
+    store(start_height, :high_cnt, :address_index)
 
     :ets.new(:unconfirmed, [:set, :protected, :named_table])
     #:ets.new(:blocks, [:set, :protected, :named_table])
@@ -91,6 +100,25 @@ defmodule Mercator.Atlas.DB do
 
   def delete(key, table) do
     :ets.delete(table, key)
+  end
+
+  defp persist!({:ok, db}) do
+    # Ignore error if already exists
+    db |> File.mkdir()
+    # Backup previous
+    db
+    |> File.ls!()
+    |> Enum.filter(&(&1 |> String.ends_with?(".bak") == false))
+    |> Enum.each(&(File.rename(Path.join(db, &1), Path.join(db, &1 <> ".bak"))))
+    # Save to disk
+    # TODO log warning or error on failure
+    :ok = :spent |> :ets.tab2file(Path.join(db, 'spent.ets'))
+    :ok = :unspent |> :ets.tab2file(Path.join(db, 'unspent.ets'))
+    :ok = :op_return |> :ets.tab2file(Path.join(db, 'op_return.ets'))
+    :ok = :address_index |> :ets.tab2file(Path.join(db, 'address_index.ets'))
+  end
+  defp persist!(:no_db) do
+    # Do nothing
   end
 
   defp mark_spent(%Outpoint{hash: <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
