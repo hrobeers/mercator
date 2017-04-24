@@ -50,6 +50,7 @@ defmodule Mercator.Atlas.Repo do
     |> Enum.unzip
     |> Tuple.to_list
     |> hd
+    |> Enum.uniq
     |> Enum.map(fn(height) ->
       # TODO use batch RPC (not supported in ppcoin v0.5)
       hash = :rpc |> Gold.getblockhash!(height)
