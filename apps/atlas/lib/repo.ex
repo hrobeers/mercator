@@ -250,7 +250,7 @@ defmodule Mercator.Atlas.Repo do
                    inputs = txn.inputs
                    |> Enum.map(&(&1.previous_output))
 
-                   txn_id = txn_id |> Base.decode16(case: :lower)
+                   txn_id = txn_id |> Base.decode16!(case: :lower)
                    %{idx: idx, txn_id: txn_id, outputs: outputs, inputs: inputs}
                  end)
                true ->
