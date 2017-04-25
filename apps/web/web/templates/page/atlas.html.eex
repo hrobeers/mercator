@@ -1,0 +1,60 @@
+<div class="jumbotron">
+  <!--<h2><%= gettext "Welcome to %{name}", name: "PeerAssets" %></h2>-->
+  <h2>Mercator Atlas</h2>
+  <p class="lead">Explore all addresses used on Peercoin's testnet</p>
+
+  <input type="text"
+         class="form-control"
+         id="search-input"
+         placeholder="Search testnet address ..."
+         autocomplete="off"
+         onkeydown = "if (event.keyCode == 13) click_search()">
+  <div class="btn btn-primary btn-sm" onclick="click_search()">Search</div>
+
+      <center><small><b>Please consider donating:</b><br/>
+      Mercator: PMERCAoRC3niFtqr4Mzw1skUi5nvVMhJic</small></center>
+
+  </div>
+</div>
+
+<div class="container">
+<div class="row">
+  <div class="col-lg-12">
+    <%= if @address do %>
+    <h3><b><%= @address %></b></h3>
+
+    <h5>Total balance: <b><%= @balance %> PPC</b></h5>
+
+    <h5>Unspent outputs:</h5>
+    <%= for output <- @unspent do %>
+        <div class="card">
+          <div class="card-header">
+            <%= output.amount %> PPC
+          </div>
+          <div class="card-block">
+            <div class="form-group">
+              <label>txn id:</label>
+              <input style="font-size:x-small" type="text" class="form-control" value="<%= output.txid %>" readonly>
+            </div>
+            <div class="form-group">
+              <label>vout:</label>
+              <input style="font-size:x-small" type="text" class="form-control" value="<%= output.vout %>" readonly>
+            </div>
+            <!--<a href="#" class="btn btn-primary">Go somewhere</a>-->
+          </div>
+        </div>
+    <% end %>
+    <% end %>
+    <h3>API:</h3>
+    GET: api/unstable/address/unspent/<i>$ADDRESS</i> <br/>
+    GET: api/unstable/address/balance/<i>$ADDRESS</i>
+  </div>
+</div>
+</div>
+
+<script>
+  function click_search(){
+  var address = document.getElementById("search-input").value;
+  window.location.href = "/atlas/" + address;
+  }
+</script>

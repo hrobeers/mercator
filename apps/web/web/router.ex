@@ -17,6 +17,8 @@ defmodule Mercator.Web.Router do
     pipe_through :browser # Use the default browser stack
 
     get "/", PageController, :index
+    get "/atlas", PageController, :atlas
+    get "/atlas/:address", PageController, :atlas
   end
 
   scope "/api/unstable/block", Mercator.Web do

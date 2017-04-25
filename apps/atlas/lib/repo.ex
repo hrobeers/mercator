@@ -89,15 +89,16 @@ defmodule Mercator.Atlas.Repo do
         amount: satoshis / :math.pow(10,@satoshi_exponent)
       }
     end)
-
-    # test: u = "mwxcZZF7Kg8fTWsaVHKJLGQeLvUrop72Mi" |> BitcoinTool.RawAddress.from_address!() |> Mercator.Atlas.Repo.list_unspent!
-    # u = "mqbaPiF7V6gDV8gRWNc8zDyW5c9T932Nuk" |> BitcoinTool.RawAddress.from_address!() |> Mercator.Atlas.Repo.list_unspent!
   end
 
-  def balance!(address) do
-    satoshis = list_unspent!(address)
+  def balance!(unspent) when is_list(unspent) do
+    satoshis = unspent
     |> Enum.reduce(0, fn(unspent, acc) -> unspent.satoshis + acc end)
     satoshis / :math.pow(10,@satoshi_exponent)
+  end
+  def balance!(address) do
+    list_unspent!(address)
+    |> balance!()
   end
 
   ## Server Callbacks
