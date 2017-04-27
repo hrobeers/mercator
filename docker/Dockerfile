@@ -18,7 +18,7 @@ ENTRYPOINT ["/entrypoint.sh"]
 #
 
 ENV APP_NAME mercator
-ENV APP_VERSION "0.0.2"
+ENV APP_VERSION "0.0.3"
 
 ENV REL_NAME web
 
@@ -32,3 +32,5 @@ COPY rel/$REL_NAME/releases/$APP_VERSION/$REL_NAME.script  $HOME/$REL_NAME/relea
 COPY rel/$REL_NAME/releases/$APP_VERSION/start.boot        $HOME/$REL_NAME/releases/$APP_VERSION/start.boot
 COPY rel/$REL_NAME/releases/$APP_VERSION/sys.config        $HOME/$REL_NAME/releases/$APP_VERSION/sys.config
 COPY rel/$REL_NAME/releases/$APP_VERSION/vm.args           $HOME/$REL_NAME/releases/$APP_VERSION/vm.args
+
+COPY db                                                 $HOME/$REL_NAME/db
