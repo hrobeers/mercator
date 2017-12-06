@@ -37,6 +37,7 @@ defmodule Mercator.Atlas.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [{:rpc, in_umbrella: true},
-     {:exrm, "~> 1.0"}]
+     {:exrm, "~> 1.0"},
+     {:gpb, ">= 3.24.0"}]
   end
 end
