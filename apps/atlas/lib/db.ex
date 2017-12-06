@@ -112,10 +112,10 @@ defmodule Mercator.Atlas.DB do
     |> Enum.each(&(File.rename(Path.join(db, &1), Path.join(db, &1 <> ".bak"))))
     # Save to disk
     # TODO log warning or error on failure
-    :ok = :spent |> :ets.tab2file(Path.join(db, 'spent.ets'))
-    :ok = :unspent |> :ets.tab2file(Path.join(db, 'unspent.ets'))
-    :ok = :op_return |> :ets.tab2file(Path.join(db, 'op_return.ets'))
-    :ok = :address_index |> :ets.tab2file(Path.join(db, 'address_index.ets'))
+    :ok = :spent |> :ets.tab2file(db |> Path.join("spent.ets") |> String.to_charlist)
+    :ok = :unspent |> :ets.tab2file(db |> Path.join("unspent.ets") |> String.to_charlist)
+    :ok = :op_return |> :ets.tab2file(db |> Path.join("op_return.ets") |> String.to_charlist)
+    :ok = :address_index |> :ets.tab2file(db |> Path.join("address_index.ets") |> String.to_charlist)
   end
   defp persist!(:no_db) do
     # Do nothing
